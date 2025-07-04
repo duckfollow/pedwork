@@ -109,7 +109,16 @@ export default function Home() {
               className={styles.name}
               style={{ color: isDark ? '#f7fafc' : '#2d3748' }}
             >
-              tankps
+              <Instagram
+                style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
+              />
+              <a
+                href="https://www.instagram.com/tankps/"
+                style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                target="_blank" rel="noopener noreferrer"
+              >
+                tankps
+              </a>
             </h1>
           </div>
 
@@ -134,23 +143,6 @@ export default function Home() {
                   target="_blank" rel="noopener noreferrer"
                 >
                   github.com/duckfollow
-                </a>
-              </li>
-              <li
-                className={styles.contactItem}
-                style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
-              >
-                <Instagram
-                  className={styles.icon}
-                  style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
-                />
-                <a
-                  href="https://www.instagram.com/tankps/"
-                  className={styles.contactText}
-                  style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
-                  target="_blank" rel="noopener noreferrer"
-                >
-                  tankps
                 </a>
               </li>
               <li
@@ -230,11 +222,11 @@ export default function Home() {
                   style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
                 />
                 <a
-                  href="mailto:p.supanchoo@gmail.com"
+                  href="mailto:p.supancho@gmail.com"
                   className={styles.contactText}
                   style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
                 >
-                  p.supanchoo@gmail.com
+                  p.supancho@gmail.com
                 </a>
               </li>
               <li

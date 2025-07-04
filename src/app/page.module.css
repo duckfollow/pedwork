@@ -221,6 +221,10 @@
   font-weight: bold;
   color: var(--text-primary);
   margin-bottom: 4px;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .position {
