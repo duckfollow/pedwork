@@ -1,12 +1,13 @@
 "use client";
 import styles from "./page.module.css";
-import { Mail, Sun, Moon, Github, Instagram, Linkedin, Twitter, Facebook, Calendar } from "lucide-react";
+import { Mail, Sun, Moon, Github, Instagram, Linkedin, Twitter, Facebook, Calendar, Tv } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 
 export default function Home() {
   const [isDark, setIsDark] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [play, setPlay] = useState(1)
   useEffect(() => {
     // Check localStorage first, then system preference
     const savedTheme = localStorage.getItem('theme');
@@ -45,6 +46,10 @@ export default function Home() {
     }
   };
 
+  const clickPlay = () => {
+    setPlay(1)
+  }
+
   // Don't render until theme is loaded to prevent flash
   if (!isLoaded) {
     return null;
@@ -59,7 +64,12 @@ export default function Home() {
           : 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)'
       }}
     >
-      <div className={styles.cardWithLanyard}>
+      <div
+        className={`${styles.cardWithLanyard} ${styles.swing}`}
+        data-animate={play}
+        onClick={clickPlay}
+        onAnimationEnd={() => setPlay(0)}
+      >
         <div className={styles.lanyard}></div>
         <div className={styles.hole}></div>
         <main
@@ -141,6 +151,23 @@ export default function Home() {
                   target="_blank" rel="noopener noreferrer"
                 >
                   tankps
+                </a>
+              </li>
+              <li
+                className={styles.contactItem}
+                style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
+              >
+                <Tv
+                  className={styles.icon}
+                  style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
+                />
+                <a
+                  href="https://www.tiktok.com/@tankps_?_t=ZS-8xjsgeejGPg&_r=1"
+                  className={styles.contactText}
+                  style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                  target="_blank" rel="noopener noreferrer"
+                >
+                  @tankps_ (TikTok)
                 </a>
               </li>
               <li
