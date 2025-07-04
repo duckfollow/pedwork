@@ -1,21 +1,21 @@
 "use client";
 import styles from "./page.module.css";
-import { Mail, Phone, Building, Clock, Sun, Moon } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Mail, Sun, Moon, Github, Instagram, Linkedin, Twitter, Facebook, Calendar } from "lucide-react";
+import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
 
 export default function Home() {
   const [isDark, setIsDark] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-
   useEffect(() => {
     // Check localStorage first, then system preference
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
+
     console.log('Theme initialization:', { savedTheme, systemPrefersDark });
-    
+
     const shouldBeDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
-    
+
     if (shouldBeDark) {
       setIsDark(true);
       document.documentElement.classList.add('dark');
@@ -25,7 +25,7 @@ export default function Home() {
       document.documentElement.classList.remove('dark');
       console.log('Set to light mode');
     }
-    
+
     setIsLoaded(true);
   }, []);
 
@@ -33,7 +33,7 @@ export default function Home() {
     const newIsDark = !isDark;
     console.log('Toggling theme:', { isDark, newIsDark });
     setIsDark(newIsDark);
-    
+
     if (newIsDark) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
@@ -51,150 +51,186 @@ export default function Home() {
   }
 
   return (
-    <div 
+    <div
       className={styles.page}
       style={{
-        background: isDark 
+        background: isDark
           ? 'linear-gradient(135deg, #fbbf24 0%, #ea580c 100%)'
           : 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)'
       }}
     >
-      <button 
-        onClick={toggleTheme} 
-        className={styles.themeToggle}
-        style={{
-          background: isDark ? '#1a202c' : 'white',
-          border: `2px solid ${isDark ? '#2d3748' : '#e2e8f0'}`,
-          color: isDark ? '#fbbf24' : '#ff8c00'
-        }}
-      >
-        {isDark ? <Sun size={20} /> : <Moon size={20} />}
-      </button>
-      
-      <main 
-        className={styles.main}
-        style={{
-          background: isDark ? '#1a202c' : 'white',
-          color: isDark ? '#f7fafc' : '#2d3748'
-        }}
-      >
-        {/* Hole for string */}
+      <div className={styles.cardWithLanyard}>
+        <div className={styles.lanyard}></div>
         <div className={styles.hole}></div>
-
-        {/* Profile Section */}
-        <div className={styles.profile}>
-          <div className={styles.avatarContainer}>
-            <div 
-              className={styles.avatar}
-              style={{
-                background: isDark 
-                  ? 'linear-gradient(135deg, #fbbf24, #ea580c)'
-                  : 'linear-gradient(135deg, #ffd700, #ff8c00)'
-              }}
-            >
-              ส
-            </div>
-          </div>
-          <h1 
-            className={styles.name}
-            style={{ color: isDark ? '#f7fafc' : '#2d3748' }}
-          >
-            สมชาย ใจดี
-          </h1>
-          <p 
-            className={styles.position}
-            style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
-          >
-            นักพัฒนาเว็บไซต์
-          </p>
-          <span 
-            className={styles.department}
-            style={{ 
-              color: isDark ? '#a0aec0' : '#718096',
-              background: isDark ? '#2d3748' : '#f7fafc'
+        <main
+          className={styles.main}
+          style={{
+            background: isDark ? '#1a202c' : 'white',
+            color: isDark ? '#f7fafc' : '#2d3748'
+          }}
+        >
+          <button
+            onClick={toggleTheme}
+            className={styles.themeToggle}
+            style={{
+              background: isDark ? '#1a202c' : 'white',
+              border: `2px solid ${isDark ? '#2d3748' : '#e2e8f0'}`,
+              color: isDark ? '#fbbf24' : '#ff8c00'
             }}
           >
-            แผกเทคโนโลยีสารสนเทศ
-          </span>
-        </div>
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
 
-        {/* Contact Section */}
-        <div 
-          className={styles.contact}
-          style={{ borderTop: `1px solid ${isDark ? '#2d3748' : '#e2e8f0'}` }}
-        >
-          <h2 
-            className={styles.contactTitle}
-            style={{ color: isDark ? '#f7fafc' : '#2d3748' }}
+          {/* Profile Section */}
+          <div className={styles.profile}>
+            <div className={styles.avatarContainer}>
+              <div
+                className={styles.avatar}
+                style={{
+                  background: isDark
+                    ? 'linear-gradient(135deg, #fbbf24, #ea580c)'
+                    : 'linear-gradient(135deg, #ffd700, #ff8c00)'
+                }}
+              >
+                <Image src="/images/avatar.png" alt="Avatar" width={100} height={100} className={styles.avatarImg} />
+              </div>
+            </div>
+            <h1
+              className={styles.name}
+              style={{ color: isDark ? '#f7fafc' : '#2d3748' }}
+            >
+              tankps
+            </h1>
+          </div>
+
+          {/* Contact Section */}
+          <div
+            className={styles.contact}
+            style={{ borderTop: `1px solid ${isDark ? '#2d3748' : '#e2e8f0'}` }}
           >
-            ข้อมูลติดต่อ
-          </h2>
-          <ul className={styles.contactList}>
-            <li 
-              className={styles.contactItem}
-              style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
-            >
-              <Mail 
-                className={styles.icon} 
-                style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
-              />
-              <a 
-                href="mailto:somchai@company.com" 
-                className={styles.contactText}
-                style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+            <ul className={styles.contactList}>
+              <li
+                className={styles.contactItem}
+                style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
               >
-                somchai@company.com
-              </a>
-            </li>
-            <li 
-              className={styles.contactItem}
-              style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
-            >
-              <Phone 
-                className={styles.icon} 
-                style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
-              />
-              <a 
-                href="tel:+66812345678" 
-                className={styles.contactText}
-                style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                <Github
+                  className={styles.icon}
+                  style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
+                />
+                <a
+                  href="https://github.com/duckfollow"
+                  className={styles.contactText}
+                  style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                  target="_blank" rel="noopener noreferrer"
+                >
+                  github.com/duckfollow
+                </a>
+              </li>
+              <li
+                className={styles.contactItem}
+                style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
               >
-                081-234-5678
-              </a>
-            </li>
-            <li 
-              className={styles.contactItem}
-              style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
-            >
-              <Building 
-                className={styles.icon} 
-                style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
-              />
-              <span 
-                className={styles.contactText}
-                style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                <Instagram
+                  className={styles.icon}
+                  style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
+                />
+                <a
+                  href="https://www.instagram.com/tankps/"
+                  className={styles.contactText}
+                  style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                  target="_blank" rel="noopener noreferrer"
+                >
+                  tankps
+                </a>
+              </li>
+              <li
+                className={styles.contactItem}
+                style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
               >
-                ห้อง 301 อาคาร A
-              </span>
-            </li>
-            <li 
-              className={styles.contactItem}
-              style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
-            >
-              <Clock 
-                className={styles.icon} 
-                style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
-              />
-              <span 
-                className={styles.contactText}
-                style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                <Linkedin
+                  className={styles.icon}
+                  style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
+                />
+                <a
+                  href="https://www.linkedin.com/in/prasit-suphancho-864014195/"
+                  className={styles.contactText}
+                  style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                  target="_blank" rel="noopener noreferrer"
+                >
+                  prasit-suphancho
+                </a>
+              </li>
+              <li
+                className={styles.contactItem}
+                style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
               >
-                จันทร์-ศุกร์ 8:00-17:00
-              </span>
-            </li>
-          </ul>
-        </div>
-      </main>
+                <Twitter
+                  className={styles.icon}
+                  style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
+                />
+                <a
+                  href="https://twitter.com/slammonder"
+                  className={styles.contactText}
+                  style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                  target="_blank" rel="noopener noreferrer"
+                >
+                  @slammonder
+                </a>
+              </li>
+              <li
+                className={styles.contactItem}
+                style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
+              >
+                <Facebook
+                  className={styles.icon}
+                  style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
+                />
+                <a
+                  href="https://www.facebook.com/prasit.suphancho"
+                  className={styles.contactText}
+                  style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                  target="_blank" rel="noopener noreferrer"
+                >
+                  prasit.suphancho
+                </a>
+              </li>
+              <li
+                className={styles.contactItem}
+                style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
+              >
+                <Mail
+                  className={styles.icon}
+                  style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
+                />
+                <a
+                  href="mailto:p.supanchoo@gmail.com"
+                  className={styles.contactText}
+                  style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                >
+                  p.supanchoo@gmail.com
+                </a>
+              </li>
+              <li
+                className={styles.contactItem}
+                style={{ background: isDark ? '#2d3748' : '#f7fafc' }}
+              >
+                <Calendar
+                  className={styles.icon}
+                  style={{ color: isDark ? '#fbbf24' : '#ff8c00' }}
+                />
+                <a
+                  href="https://th.techcal.dev/"
+                  className={styles.contactText}
+                  style={{ color: isDark ? '#a0aec0' : '#4a5568' }}
+                  target="_blank" rel="noopener noreferrer"
+                >
+                  th.techcal.dev
+                </a>
+              </li>
+            </ul>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

@@ -1,10 +1,10 @@
 /* Theme toggle button */
 .themeToggle {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 48px;
-  height: 48px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: var(--card-bg);
   border: 2px solid var(--border-color);
@@ -14,34 +14,36 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px var(--card-shadow);
-  z-index: 1000;
+  box-shadow: 0 2px 8px var(--card-shadow);
+  z-index: 10;
 }
 
 .themeToggle:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 16px var(--card-shadow);
+  box-shadow: 0 4px 12px var(--card-shadow);
 }
 
 .page {
   min-height: 100vh;
   background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 20px;
+  padding: 0;
 }
 
 .main {
   background: var(--card-bg);
   border-radius: 20px;
   box-shadow: 0 20px 40px var(--card-shadow);
-  padding: 20px 40px 20px 40px;
-  max-width: 400px;
+  padding: 12px 16px 12px 16px;
+  max-width: 320px;
   width: 100%;
+  min-height: 400px;
   text-align: center;
   position: relative;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 .main::before {
@@ -126,16 +128,14 @@
 
 /* Hole for string */
 .hole {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
   width: 40px;
   height: 24px;
   background: transparent;
   border: 3px solid var(--hole-border);
   border-radius: 8px;
+  margin-bottom: -36px;
   z-index: 2;
+  position: relative;
 }
 
 .hole::after {
@@ -189,52 +189,52 @@
 
 /* Profile section */
 .profile {
-  margin-bottom: 20px;
-  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-top: 36px;
 }
 
 .avatarContainer {
   position: relative;
   display: flex;
   justify-content: center;
-  margin: 32px auto 20px auto;
+  margin: 0 auto 10px auto;
 }
 
 .avatar {
-  width: 120px;
-  height: 120px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  font-size: 32px;
   color: white;
   font-weight: bold;
-  box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 6px 12px rgba(255, 215, 0, 0.3);
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 .name {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: bold;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .position {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--text-accent);
   font-weight: 500;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .department {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-secondary);
   background: var(--department-bg);
-  padding: 8px 16px;
+  padding: 4px 10px;
   border-radius: 20px;
   display: inline-block;
 }
@@ -242,28 +242,28 @@
 /* Contact section */
 .contact {
   border-top: 1px solid var(--border-color);
-  padding-top: 30px;
+  padding-top: 14px;
 }
 
 .contactTitle {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .contactList {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 8px;
 }
 
 .contactItem {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 8px;
+  padding: 8px 10px;
   background: var(--contact-bg);
   border-radius: 12px;
   transition: all 0.3s ease;
@@ -298,13 +298,14 @@
 
 /* Responsive design */
 @media (max-width: 480px) {
-  .main {
-    padding: 30px 20px;
-  }
+  .cardWithLanyard, .main { max-width: 95vw; }
+  .lanyard { width: 10px; height: 32px; }
+  /* .hole { width: 28px; height: 16px; margin-bottom: -24px; } */
+  .profile { margin-top: 36px; }
   
   .avatar {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     font-size: 40px;
   }
   
@@ -335,41 +336,65 @@
 }
 
 /* สายคล้องคอใหม่ */
-.lanyard {
-  position: absolute;
+.lanyardWrap {
+  position: fixed;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 8px;
-  height: 120px;
-  background: linear-gradient(to bottom, var(--bg-gradient-start), var(--bg-gradient-end));
-  border-radius: 4px;
-  z-index: 1;
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  width: 18px;
+  height: 70px;
+  z-index: 2;
+  pointer-events: none;
 }
 
-.lanyard::before {
-  content: '';
-  position: absolute;
-  top: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 30px;
-  height: 30px;
-  background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+.lanyard {
+  width: 54px;
+  height: 100px;
+  background: linear-gradient(180deg, #ff5858 0%, #f09819 100%);
+  border-radius: 0 0 8px 8px;
+  margin-bottom: -14px;
+  box-shadow: 0 2px 8px rgba(255, 88, 88, 0.15);
+  z-index: 3;
 }
 
-.lanyard::after {
-  content: '';
+.lanyardHead {
   position: absolute;
-  top: -10px;
   left: 50%;
+  top: 62px;
   transform: translateX(-50%);
-  width: 20px;
+  width: 28px;
+  height: 14px;
+  background: #e53935;
+  border-radius: 14px 14px 10px 10px;
+  z-index: 2;
+}
+
+.lanyardLock {
+  position: absolute;
+  left: 50%;
+  top: 74px;
+  transform: translateX(-50%);
+  width: 32px;
   height: 20px;
-  background: var(--card-bg);
+  background: #23272f;
+  border-radius: 6px;
+  border: 4px solid #e53935;
+  z-index: 2;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 50%;
-  border: 2px solid var(--bg-gradient-end);
+  display: block;
+}
+
+.cardWithLanyard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto 0 auto;
 }
