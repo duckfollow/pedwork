@@ -2,7 +2,7 @@
 import styles from "./page.module.css";
 import { Mail, Sun, Moon, Github, Instagram, Linkedin, Twitter, Facebook, Calendar } from "lucide-react";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const [isDark, setIsDark] = useState(false);

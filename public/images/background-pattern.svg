@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="1600" viewBox="0 0 800 1600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="1600" fill="#18182F"/>
+  <g>
+    <rect x="50" y="100" width="60" height="60" rx="10" fill="#FFD600"/>
+    <circle cx="200" cy="200" r="30" fill="#00C9A7"/>
+    <rect x="300" y="80" width="80" height="80" rx="20" fill="#A259F7"/>
+    <polygon points="500,120 540,180 460,180" fill="#FF61A6"/>
+    <rect x="600" y="100" width="60" height="60" rx="10" fill="#43B0F1"/>
+    <circle cx="700" cy="200" r="30" fill="#FFD600"/>
+    <rect x="100" y="400" width="80" height="80" rx="20" fill="#A259F7"/>
+    <polygon points="200,520 240,580 160,580" fill="#FF61A6"/>
+    <rect x="300" y="400" width="60" height="60" rx="10" fill="#FFD600"/>
+    <circle cx="400" cy="500" r="30" fill="#00C9A7"/>
+    <rect x="500" y="400" width="80" height="80" rx="20" fill="#A259F7"/>
+    <polygon points="700,520 740,580 660,580" fill="#FF61A6"/>
+    <rect x="600" y="700" width="60" height="60" rx="10" fill="#43B0F1"/>
+    <circle cx="700" cy="800" r="30" fill="#FFD600"/>
+    <rect x="100" y="900" width="80" height="80" rx="20" fill="#A259F7"/>
+    <polygon points="200,1020 240,1080 160,1080" fill="#FF61A6"/>
+    <rect x="300" y="900" width="60" height="60" rx="10" fill="#FFD600"/>
+    <circle cx="400" cy="1000" r="30" fill="#00C9A7"/>
+    <rect x="500" y="900" width="80" height="80" rx="20" fill="#A259F7"/>
+    <polygon points="700,1020 740,1080 660,1080" fill="#FF61A6"/>
+    <rect x="600" y="1300" width="60" height="60" rx="10" fill="#43B0F1"/>
+    <circle cx="700" cy="1400" r="30" fill="#FFD600"/>
+    <rect x="100" y="1500" width="80" height="80" rx="20" fill="#A259F7"/>
+    <polygon points="200,1620 240,1680 160,1680" fill="#FF61A6"/>
+    <rect x="300" y="1500" width="60" height="60" rx="10" fill="#FFD600"/>
+    <circle cx="400" cy="1600" r="30" fill="#00C9A7"/>
+    <rect x="500" y="1500" width="80" height="80" rx="20" fill="#A259F7"/>
+    <polygon points="700,1620 740,1680 660,1680" fill="#FF61A6"/>
+    <!-- เส้นโค้งและเส้นตรง -->
+    <path d="M100 300 Q200 350 300 300" stroke="#FFD600" stroke-width="8" fill="none"/>
+    <path d="M400 350 Q500 400 600 350" stroke="#43B0F1" stroke-width="8" fill="none"/>
+    <path d="M200 700 Q300 750 400 700" stroke="#FF61A6" stroke-width="8" fill="none"/>
+    <path d="M500 750 Q600 800 700 750" stroke="#00C9A7" stroke-width="8" fill="none"/>
+    <path d="M100 1200 Q200 1250 300 1200" stroke="#FFD600" stroke-width="8" fill="none"/>
+    <path d="M400 1250 Q500 1300 600 1250" stroke="#43B0F1" stroke-width="8" fill="none"/>
+  </g>
+</svg> 
