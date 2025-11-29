@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 
 // =============================================================================
@@ -12,6 +12,7 @@ import Image from "next/image";
 // - Responsive design (mobile → desktop)
 // - Hover/press transitions
 // - Fallback handling for missing hero image
+// Note: SEO metadata is handled in layout.tsx
 // =============================================================================
 
 export default function NightAtDetectivePage() {
@@ -20,29 +21,6 @@ export default function NightAtDetectivePage() {
   // ---------------------------------------------------------------------------
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageError, setImageError] = useState(false);
-
-  // ---------------------------------------------------------------------------
-  // SEO: Set document title on mount (client-side)
-  // For full SSR metadata, use a separate layout.tsx or generateMetadata
-  // ---------------------------------------------------------------------------
-  useEffect(() => {
-    document.title = "Night At Detective — A Mystery Awaits";
-    
-    // Set meta description
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute(
-        "content",
-        "Unravel the mystery in Night At Detective. A gripping noir detective game where every shadow hides a secret."
-      );
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "description";
-      meta.content =
-        "Unravel the mystery in Night At Detective. A gripping noir detective game where every shadow hides a secret.";
-      document.head.appendChild(meta);
-    }
-  }, []);
 
   // ---------------------------------------------------------------------------
   // HANDLERS
