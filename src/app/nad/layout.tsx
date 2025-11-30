@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${baseUrl}/games/hero.png`,
+        url: `${baseUrl}/games/nad-meta.png`,
         width: 1200,
         height: 630,
         alt: "Night At Detective - A noir detective mystery game",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
       "Every shadow hides a secret. Every clue leads deeper into the darkness. Unravel the mystery in this gripping noir detective game.",
     images: [
       {
-        url: `${baseUrl}/games/hero.png`,
+        url: `${baseUrl}/games/nad-meta.png`,
         alt: "Night At Detective - A noir detective mystery game",
       },
     ],
