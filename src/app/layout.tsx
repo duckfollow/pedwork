@@ -17,32 +17,47 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pedwork ——— @duckfollow",
+  title: "Prasit Suphancho | @tankps - Personal Profile",
   description:
-    "A personal profile website designed to make you stand out. Pedwork is your digital identity card, crafted to introduce who you are and showcase your projects, achievements, and unique personality in a confident, stylish way. Whether you’re a creative, a professional, or just someone with a story to tell, Pedwork gives you the tools to present yourself with attitude and clarity — like wearing your name badge with pride on a modern digital stage.",
+    "Personal profile website of Prasit Suphancho (@tankps). Software developer, creative thinker, and tech enthusiast. Connect with me on social media and explore my digital presence.",
+  keywords: [
+    "Prasit Suphancho",
+    "tankps",
+    "duckfollow",
+    "developer",
+    "portfolio",
+    "personal website",
+  ],
+  authors: [{ name: "Prasit Suphancho" }],
+  creator: "Prasit Suphancho",
   openGraph: {
-    title: "Pedwork ——— @duckfollow",
+    title: "Prasit Suphancho | @tankps - Personal Profile",
     description:
-      "A personal profile website designed to make you stand out. Pedwork is your digital identity card, crafted to introduce who you are and showcase your projects, achievements, and unique personality in a confident, stylish way. Whether you’re a creative, a professional, or just someone with a story to tell, Pedwork gives you the tools to present yourself with attitude and clarity — like wearing your name badge with pride on a modern digital stage.",
-    url: "https://duckfollow.co/", // <- แก้เป็นโดเมนจริง
+      "Personal profile website of Prasit Suphancho (@tankps). Software developer, creative thinker, and tech enthusiast. Connect with me on social media and explore my digital presence.",
+    url: "https://duckfollow.co/",
+    siteName: "Pedwork",
     type: "website",
+    locale: "en_US",
     images: [
       {
-        url: "https://pedwork.vercel.app/images/og-thumbnail.png", // absolute URL
+        url: "https://pedwork.vercel.app/images/og-thumbnail.png",
         width: 1200,
         height: 630,
-        alt: "Pedwork — Your digital badge of honor",
+        alt: "Prasit Suphancho - Personal Profile",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pedwork ——— @duckfollow",
+    title: "Prasit Suphancho | @tankps - Personal Profile",
     description:
-      "A personal profile website designed to make you stand out. Pedwork is your digital identity card, crafted to introduce who you are and showcase your projects, achievements, and unique personality in a confident, stylish way. Whether you’re a creative, a professional, or just someone with a story to tell, Pedwork gives you the tools to present yourself with attitude and clarity — like wearing your name badge with pride on a modern digital stage.",
-    images: [
-      "https://pedwork.vercel.app/images/og-thumbnail.png", // absolute URL
-    ],
+      "Personal profile website of Prasit Suphancho (@tankps). Software developer, creative thinker, and tech enthusiast.",
+    creator: "@slammonder",
+    images: ["https://pedwork.vercel.app/images/og-thumbnail.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -52,7 +67,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -63,6 +78,8 @@ export default function RootLayout({
                   var systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                   if (theme === 'dark' || (!theme && systemPrefersDark)) {
                     document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
                   }
                 } catch (e) {}
               })();
@@ -70,7 +87,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`} cz-shortcut-listen="true">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         {/* Google Analytics */}
         {GA_MEASUREMENT_ID && (
           <>
