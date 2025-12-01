@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
+import { trackClick } from "@/lib/gtag";
 
 export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
@@ -21,6 +22,9 @@ export default function ThemeToggle() {
     const newTheme = isDark ? "light" : "dark";
     setIsDark(!isDark);
     localStorage.setItem("theme", newTheme);
+
+    // Track theme toggle event
+    trackClick(`theme_toggle_${newTheme}`);
 
     if (newTheme === "dark") {
       document.documentElement.classList.add("dark");
@@ -54,4 +58,3 @@ export default function ThemeToggle() {
     </button>
   );
 }
-

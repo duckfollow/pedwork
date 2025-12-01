@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { trackClick, trackSocialClick, trackCTAClick } from "@/lib/gtag";
 
 // =============================================================================
 // NIGHT AT DETECTIVE — Game Promotion Page
@@ -28,6 +29,10 @@ export default function NightAtDetectivePage() {
   const handleWishlistToggle = () => {
     const newState = !isWishlisted;
     setIsWishlisted(newState);
+    
+    // Track wishlist action in Google Analytics
+    trackCTAClick(newState ? "wishlist_add" : "wishlist_remove");
+    
     // Log to console as requested
     console.log(
       newState
@@ -148,6 +153,7 @@ export default function NightAtDetectivePage() {
               disabled
               aria-label="Stream feature coming soon, not available yet"
               aria-disabled="true"
+              onClick={() => trackClick("stream_button_disabled")}
               className="flex h-full cursor-not-allowed items-center justify-center gap-3 rounded-lg border-2 
                          border-zinc-600 bg-zinc-800/50 px-6 py-3 text-base font-semibold tracking-wide 
                          whitespace-nowrap text-zinc-500 opacity-70 backdrop-blur-sm transition-all duration-300
@@ -188,6 +194,7 @@ export default function NightAtDetectivePage() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Follow us on Facebook"
+            onClick={() => trackSocialClick("facebook_nad")}
             className="group relative flex items-center justify-center gap-3 overflow-hidden rounded-lg 
                        bg-[#1877F2] px-6 py-3 text-base font-semibold tracking-wide whitespace-nowrap text-white shadow-xl 
                        transition-all duration-300 ease-out

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { trackClick } from "@/lib/gtag";
 
 export default function ScrollIndicator() {
   const [isAtBottom, setIsAtBottom] = useState(false);
@@ -24,12 +25,16 @@ export default function ScrollIndicator() {
 
   const handleClick = () => {
     if (isAtBottom) {
+      // Track scroll to top event
+      trackClick("scroll_to_top");
       // Scroll to top
       window.scrollTo({
         top: 0,
         behavior: "smooth",
       });
     } else {
+      // Track scroll to bottom event
+      trackClick("scroll_to_bottom");
       // Scroll to bottom (social grid section)
       window.scrollTo({
         top: window.innerHeight,

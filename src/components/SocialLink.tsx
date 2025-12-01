@@ -1,4 +1,7 @@
+"use client";
+
 import { LucideIcon } from "lucide-react";
+import { trackSocialClick } from "@/lib/gtag";
 
 interface SocialLinkProps {
   href: string;
@@ -15,11 +18,16 @@ export default function SocialLink({
   username,
   color = "text-gray-700 dark:text-gray-300",
 }: SocialLinkProps) {
+  const handleClick = () => {
+    trackSocialClick(label);
+  };
+
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={handleClick}
       className="group flex flex-col items-center justify-center p-6 rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/50 dark:border-gray-700/50 shadow-lg hover:shadow-2xl hover:-translate-y-2 hover:scale-105 transition-all duration-300 ease-out"
     >
       <div
@@ -38,4 +46,3 @@ export default function SocialLink({
     </a>
   );
 }
-
