@@ -11,6 +11,7 @@ import {
   Music2,
 } from "lucide-react";
 import SocialLink from "./SocialLink";
+import MatrixRain from "./MatrixRain";
 
 const socialLinks = [
   {
@@ -73,7 +74,12 @@ const socialLinks = [
 
 export default function SocialGrid() {
   return (
-    <section className="py-20 px-6 bg-gradient-to-b from-orange-50 to-yellow-50 dark:from-gray-900 dark:to-gray-800 relative">
+    <section className="py-20 px-6 bg-gradient-to-b from-orange-50 to-yellow-50 dark:from-gray-900 dark:to-black relative overflow-hidden">
+      {/* Matrix rain background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <MatrixRain />
+      </div>
+
       {/* Section background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-yellow-300/20 to-transparent dark:from-amber-400/10" />
