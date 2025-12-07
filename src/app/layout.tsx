@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 // Google Analytics Measurement ID from environment variable
@@ -108,6 +109,7 @@ export default function RootLayout({
           </>
         )}
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
