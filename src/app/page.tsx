@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Stamp } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import ProfileHero from "@/components/ProfileHero";
 import SocialGrid from "@/components/SocialGrid";
@@ -61,6 +63,34 @@ export default function Home() {
       <div className="relative z-10">
         <ThemeToggle />
         <ProfileHero />
+        
+        {/* Features Section */}
+        <section className="py-12 px-6">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-center text-2xl md:text-3xl font-bold text-white/90 dark:text-white mb-8 animate-fade-in">
+              Try My Tools
+            </h2>
+            <div className="flex justify-center">
+              <Link
+                href="/features/stamp"
+                className="group flex items-center gap-4 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-fade-in-up"
+              >
+                <div className="p-3 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-shadow">
+                  <Stamp className="w-8 h-8 text-white" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
+                    Photo Stamp
+                  </h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    Create vintage postage stamps from your photos
+                  </p>
+                </div>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <SocialGrid />
         <ScrollIndicator />
       </div>
