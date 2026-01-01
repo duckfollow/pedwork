@@ -18,8 +18,9 @@ export default function CameraPreview({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const isMountedRef = useRef(true);
+  const isStartingRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
 
   const stopCamera = useCallback(() => {
@@ -32,33 +33,52 @@ export default function CameraPreview({
     }
   }, []);
 
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (mode: "user" | "environment") => {
+    // Prevent multiple simultaneous starts
+    if (isStartingRef.current) return;
     if (!isMountedRef.current) return;
     
+    isStartingRef.current = true;
     setIsLoading(true);
+    
+    // Stop existing camera first
     stopCamera();
+    
+    // Small delay to ensure camera is fully released
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (!isMountedRef.current) {
+      isStartingRef.current = false;
+      return;
+    }
 
     try {
       // Check for multiple cameras
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter((d) => d.kind === "videoinput");
       
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        isStartingRef.current = false;
+        return;
+      }
+      
       setHasMultipleCameras(videoDevices.length > 1);
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const constraints: MediaStreamConstraints = {
         video: {
-          facingMode: facingMode,
+          facingMode: { ideal: mode },
           width: { ideal: 1080 },
           height: { ideal: 1080 },
-          aspectRatio: { ideal: 1 },
         },
         audio: false,
-      });
+      };
 
-      // Check if component is still mounted and active
-      if (!isMountedRef.current || !isActive) {
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      // Check if component is still mounted
+      if (!isMountedRef.current) {
         stream.getTracks().forEach((track) => track.stop());
+        isStartingRef.current = false;
         return;
       }
 
@@ -68,31 +88,38 @@ export default function CameraPreview({
       if (video) {
         video.srcObject = stream;
         
-        // Wait for video to be ready before playing
-        video.onloadedmetadata = async () => {
-          if (!isMountedRef.current || !isActive) {
-            stream.getTracks().forEach((track) => track.stop());
-            return;
+        // Wait for video to be ready
+        await new Promise<void>((resolve, reject) => {
+          video.onloadedmetadata = () => resolve();
+          video.onerror = () => reject(new Error("Video load error"));
+          // Timeout after 5 seconds
+          setTimeout(() => reject(new Error("Video load timeout")), 5000);
+        });
+
+        if (!isMountedRef.current) {
+          stream.getTracks().forEach((track) => track.stop());
+          isStartingRef.current = false;
+          return;
+        }
+
+        try {
+          await video.play();
+        } catch (playError) {
+          // Ignore AbortError - it just means the play was interrupted
+          if (playError instanceof Error && playError.name !== "AbortError") {
+            throw playError;
           }
-          
-          try {
-            await video.play();
-            if (isMountedRef.current) {
-              setIsLoading(false);
-            }
-          } catch (playError) {
-            // Ignore AbortError - it just means the play was interrupted
-            if (playError instanceof Error && playError.name !== "AbortError") {
-              console.error("Video play error:", playError);
-            }
-            if (isMountedRef.current) {
-              setIsLoading(false);
-            }
-          }
-        };
+        }
+
+        if (isMountedRef.current) {
+          setIsLoading(false);
+        }
       }
     } catch (err) {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        isStartingRef.current = false;
+        return;
+      }
       
       setIsLoading(false);
       if (err instanceof Error) {
@@ -102,44 +129,59 @@ export default function CameraPreview({
           onError("No camera found on this device.");
         } else if (err.name === "NotReadableError") {
           onError("Camera is already in use by another application.");
+        } else if (err.name === "OverconstrainedError") {
+          // Try again without facing mode constraint
+          try {
+            const fallbackStream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: false,
+            });
+            
+            if (!isMountedRef.current) {
+              fallbackStream.getTracks().forEach((track) => track.stop());
+              isStartingRef.current = false;
+              return;
+            }
+
+            streamRef.current = fallbackStream;
+            const video = videoRef.current;
+            if (video) {
+              video.srcObject = fallbackStream;
+              await video.play();
+              setIsLoading(false);
+            }
+          } catch {
+            onError("Could not access camera.");
+          }
         } else if (err.name === "AbortError") {
           // Silently ignore abort errors
-          return;
         } else {
           onError(`Camera error: ${err.message}`);
         }
       }
+    } finally {
+      isStartingRef.current = false;
     }
-  }, [facingMode, isActive, onError, stopCamera]);
+  }, [onError, stopCamera]);
 
   // Track mounted state
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      stopCamera();
     };
-  }, []);
+  }, [stopCamera]);
 
-  // Handle camera start/stop
+  // Handle camera start/stop based on isActive
   useEffect(() => {
     if (isActive) {
-      startCamera();
+      startCamera(facingMode);
     } else {
       stopCamera();
       setIsLoading(true);
     }
-
-    return () => {
-      stopCamera();
-    };
-  }, [isActive, startCamera, stopCamera]);
-
-  // Handle facing mode change
-  useEffect(() => {
-    if (isActive) {
-      startCamera();
-    }
-  }, [facingMode, isActive, startCamera]);
+  }, [isActive]); // Only depend on isActive, not facingMode or startCamera
 
   const handleCapture = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -173,8 +215,10 @@ export default function CameraPreview({
     onCapture(imageData);
   };
 
-  const toggleCamera = () => {
-    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+  const toggleCamera = async () => {
+    const newMode = facingMode === "user" ? "environment" : "user";
+    setFacingMode(newMode);
+    await startCamera(newMode);
   };
 
   return (

@@ -78,55 +78,77 @@ export default function StampFrame({ imageSrc, location, useOriginal = false, vi
       // Perforation settings - larger, fewer perforations for calmer look
       const perfRadius = 10;
       const perfSpacing = 26;
+      
+      // Shadow settings
+      const shadowOffsetX = 8;
+      const shadowOffsetY = 10;
+      const shadowBlur = 15;
+      const shadowPadding = shadowOffsetX + shadowBlur + 5;
 
-      canvas.width = stampWidth;
-      canvas.height = stampHeight;
+      // Canvas size includes shadow space
+      canvas.width = stampWidth + shadowPadding;
+      canvas.height = stampHeight + shadowPadding;
 
       // Clear canvas
-      ctx.clearRect(0, 0, stampWidth, stampHeight);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Calculate number of perforations
       const topScallops = Math.floor(stampWidth / perfSpacing);
       const leftScallops = Math.floor(stampHeight / perfSpacing);
       
-      // Create clipping path with perforated edges
+      // Helper function to create perforated path
+      const createPerforatedPath = (offsetX: number, offsetY: number) => {
+        ctx.beginPath();
+        
+        // Top edge perforations - centered
+        const topOffset = (stampWidth - topScallops * perfSpacing) / 2 + perfSpacing / 2;
+        for (let i = 0; i < topScallops; i++) {
+          const x = offsetX + topOffset + i * perfSpacing;
+          ctx.moveTo(x + perfRadius, offsetY);
+          ctx.arc(x, offsetY, perfRadius, 0, Math.PI, false);
+        }
+        
+        // Bottom edge perforations - centered
+        for (let i = 0; i < topScallops; i++) {
+          const x = offsetX + topOffset + i * perfSpacing;
+          ctx.moveTo(x - perfRadius, offsetY + stampHeight);
+          ctx.arc(x, offsetY + stampHeight, perfRadius, Math.PI, 0, false);
+        }
+        
+        // Left edge perforations - centered
+        const leftOffsetVal = (stampHeight - leftScallops * perfSpacing) / 2 + perfSpacing / 2;
+        for (let i = 0; i < leftScallops; i++) {
+          const y = offsetY + leftOffsetVal + i * perfSpacing;
+          ctx.moveTo(offsetX, y - perfRadius);
+          ctx.arc(offsetX, y, perfRadius, -Math.PI / 2, Math.PI / 2, false);
+        }
+        
+        // Right edge perforations - centered
+        for (let i = 0; i < leftScallops; i++) {
+          const y = offsetY + leftOffsetVal + i * perfSpacing;
+          ctx.moveTo(offsetX + stampWidth, y + perfRadius);
+          ctx.arc(offsetX + stampWidth, y, perfRadius, Math.PI / 2, -Math.PI / 2, false);
+        }
+        
+        // Main stamp body
+        ctx.rect(offsetX, offsetY, stampWidth, stampHeight);
+      };
+      
+      // Draw shadow first
       ctx.save();
-      ctx.beginPath();
-      
-      // Top edge perforations - centered
-      const topOffset = (stampWidth - topScallops * perfSpacing) / 2 + perfSpacing / 2;
-      for (let i = 0; i < topScallops; i++) {
-        const x = topOffset + i * perfSpacing;
-        ctx.moveTo(x + perfRadius, 0);
-        ctx.arc(x, 0, perfRadius, 0, Math.PI, false);
-      }
-      
-      // Bottom edge perforations - centered
-      for (let i = 0; i < topScallops; i++) {
-        const x = topOffset + i * perfSpacing;
-        ctx.moveTo(x - perfRadius, stampHeight);
-        ctx.arc(x, stampHeight, perfRadius, Math.PI, 0, false);
-      }
-      
-      // Left edge perforations - centered
-      const leftOffset = (stampHeight - leftScallops * perfSpacing) / 2 + perfSpacing / 2;
-      for (let i = 0; i < leftScallops; i++) {
-        const y = leftOffset + i * perfSpacing;
-        ctx.moveTo(0, y - perfRadius);
-        ctx.arc(0, y, perfRadius, -Math.PI / 2, Math.PI / 2, false);
-      }
-      
-      // Right edge perforations - centered
-      for (let i = 0; i < leftScallops; i++) {
-        const y = leftOffset + i * perfSpacing;
-        ctx.moveTo(stampWidth, y + perfRadius);
-        ctx.arc(stampWidth, y, perfRadius, Math.PI / 2, -Math.PI / 2, false);
-      }
-      
-      // Main stamp body
-      ctx.rect(0, 0, stampWidth, stampHeight);
+      createPerforatedPath(shadowOffsetX, shadowOffsetY);
       ctx.clip("evenodd");
-
+      ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+      ctx.filter = `blur(${shadowBlur}px)`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.filter = "none";
+      ctx.restore();
+      
+      // Create clipping path with perforated edges for main stamp
+      ctx.save();
+      createPerforatedPath(0, 0);
+      ctx.clip("evenodd");
+      
       // Fill stamp background - vintage paper cream color
       ctx.fillStyle = "#f5f0e6";
       ctx.fillRect(0, 0, stampWidth, stampHeight);
@@ -348,9 +370,6 @@ export default function StampFrame({ imageSrc, location, useOriginal = false, vi
         className={`w-full h-auto transition-opacity duration-500 ${
           isReady ? "opacity-100" : "opacity-0"
         }`}
-        style={{
-          filter: "drop-shadow(0 8px 25px rgba(0, 0, 0, 0.25))",
-        }}
       />
       {!isReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded-lg aspect-square">
