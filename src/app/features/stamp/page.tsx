@@ -63,53 +63,55 @@ export default function StampCameraPage() {
     checkShareSupport();
   }, []);
 
-  // Request geolocation on mount (non-blocking, with delay for Safari)
-  useEffect(() => {
-    // Delay geolocation request slightly for Safari compatibility
-    const timer = setTimeout(() => {
-      requestLocation();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+  // Ref to track if location request is in progress (avoids stale closure issues)
+  const isRequestingLocationRef = useRef(false);
 
-  const requestLocation = useCallback(async () => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
+  // Request geolocation on mount
+  useEffect(() => {
+    // Check if geolocation is available
+    if (typeof window === "undefined" || !("geolocation" in navigator)) {
       setLocationError("Geolocation not supported");
       return;
     }
 
-    // Prevent multiple simultaneous requests
-    if (isLoadingLocation) return;
-
+    // Prevent duplicate requests
+    if (isRequestingLocationRef.current) return;
+    isRequestingLocationRef.current = true;
     setIsLoadingLocation(true);
     setLocationError(null);
 
-    // Create a manual timeout as Safari sometimes doesn't trigger error callback
-    let didTimeout = false;
-    const timeoutId = setTimeout(() => {
-      didTimeout = true;
-      setIsLoadingLocation(false);
-      setLocationError("Location request timed out");
-    }, 15000); // 15 second manual timeout
+    let didComplete = false;
+    let watchId: number | null = null;
+
+    // Manual timeout fallback for Safari
+    const timeoutId = window.setTimeout(() => {
+      if (!didComplete) {
+        didComplete = true;
+        if (watchId !== null) {
+          navigator.geolocation.clearWatch(watchId);
+        }
+        setIsLoadingLocation(false);
+        setLocationError("Location request timed out");
+        isRequestingLocationRef.current = false;
+      }
+    }, 20000);
 
     const handleSuccess = async (position: GeolocationPosition) => {
-      if (didTimeout) return;
-      clearTimeout(timeoutId);
+      if (didComplete) return;
+      didComplete = true;
+      window.clearTimeout(timeoutId);
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
 
       const { latitude, longitude } = position.coords;
       setLocation({ lat: latitude, lng: longitude });
 
-      // Try to reverse geocode to get city/country
+      // Try to reverse geocode
       try {
-        const controller = new AbortController();
-        const fetchTimeout = setTimeout(() => controller.abort(), 8000);
-
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`,
-          { signal: controller.signal }
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
         );
-        
-        clearTimeout(fetchTimeout);
         
         if (response.ok) {
           const data = await response.json();
@@ -127,54 +129,154 @@ export default function StampCameraPage() {
             setLocation({ country, lat: latitude, lng: longitude });
             setLocationText(country);
           } else {
-            // Fallback to coordinates
             setLocationText(`${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`);
           }
         } else {
-          // Fallback to coordinates if reverse geocoding fails
           setLocationText(`${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`);
         }
       } catch {
-        // Fallback to coordinates if reverse geocoding fails
         setLocationText(`${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`);
       }
       
       setIsLoadingLocation(false);
+      isRequestingLocationRef.current = false;
     };
 
     const handleError = (err: GeolocationPositionError) => {
-      if (didTimeout) return;
-      clearTimeout(timeoutId);
+      if (didComplete) return;
+      didComplete = true;
+      window.clearTimeout(timeoutId);
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
       
       setIsLoadingLocation(false);
-      if (err.code === err.PERMISSION_DENIED) {
+      isRequestingLocationRef.current = false;
+      
+      if (err.code === 1) { // PERMISSION_DENIED
         setLocationError("Location access denied");
-      } else if (err.code === err.POSITION_UNAVAILABLE) {
+      } else if (err.code === 2) { // POSITION_UNAVAILABLE
         setLocationError("Location unavailable");
-      } else if (err.code === err.TIMEOUT) {
+      } else if (err.code === 3) { // TIMEOUT
         setLocationError("Location request timed out");
       } else {
         setLocationError("Could not get location");
       }
     };
 
+    // Use watchPosition for better Safari compatibility
+    // Safari sometimes ignores getCurrentPosition but works with watchPosition
     try {
-      navigator.geolocation.getCurrentPosition(
+      watchId = navigator.geolocation.watchPosition(
         handleSuccess,
         handleError,
         {
           enableHighAccuracy: false,
-          timeout: 12000, // Increased timeout for Safari
-          maximumAge: 300000, // Cache for 5 minutes
+          timeout: 15000,
+          maximumAge: 300000,
         }
       );
     } catch {
-      // Catch any synchronous errors (rare but possible)
-      clearTimeout(timeoutId);
+      didComplete = true;
+      window.clearTimeout(timeoutId);
       setIsLoadingLocation(false);
       setLocationError("Geolocation error");
+      isRequestingLocationRef.current = false;
     }
-  }, [isLoadingLocation]);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, []);
+
+  // Manual retry function for user interaction
+  const requestLocation = useCallback(() => {
+    if (isRequestingLocationRef.current) return;
+    
+    // Reset state
+    setLocationError(null);
+    isRequestingLocationRef.current = true;
+    setIsLoadingLocation(true);
+
+    let didComplete = false;
+
+    const timeoutId = window.setTimeout(() => {
+      if (!didComplete) {
+        didComplete = true;
+        setIsLoadingLocation(false);
+        setLocationError("Location request timed out");
+        isRequestingLocationRef.current = false;
+      }
+    }, 20000);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        if (didComplete) return;
+        didComplete = true;
+        window.clearTimeout(timeoutId);
+
+        const { latitude, longitude } = position.coords;
+        setLocation({ lat: latitude, lng: longitude });
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            const city = data.address?.city || 
+                        data.address?.town || 
+                        data.address?.village || 
+                        data.address?.municipality ||
+                        data.address?.county;
+            const country = data.address?.country;
+            
+            if (city && country) {
+              setLocation({ city, country, lat: latitude, lng: longitude });
+              setLocationText(`${city}, ${country}`);
+            } else if (country) {
+              setLocation({ country, lat: latitude, lng: longitude });
+              setLocationText(country);
+            } else {
+              setLocationText(`${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`);
+            }
+          } else {
+            setLocationText(`${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`);
+          }
+        } catch {
+          setLocationText(`${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`);
+        }
+        
+        setIsLoadingLocation(false);
+        isRequestingLocationRef.current = false;
+      },
+      (err) => {
+        if (didComplete) return;
+        didComplete = true;
+        window.clearTimeout(timeoutId);
+        
+        setIsLoadingLocation(false);
+        isRequestingLocationRef.current = false;
+        
+        if (err.code === 1) {
+          setLocationError("Location access denied");
+        } else if (err.code === 2) {
+          setLocationError("Location unavailable");
+        } else {
+          setLocationError("Could not get location");
+        }
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 15000,
+        maximumAge: 300000,
+      }
+    );
+  }, []);
 
   const handleStartCamera = () => {
     setError(null);
