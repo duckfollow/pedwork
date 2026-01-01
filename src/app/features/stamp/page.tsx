@@ -5,6 +5,7 @@ import { Download, RefreshCcw, Camera, AlertCircle, Stamp, MapPin, Loader2, Uplo
 import CameraPreview from "@/components/CameraPreview";
 import ImageCropper from "@/components/ImageCropper";
 import StampFrame from "@/components/StampFrame";
+import { trackEvent } from "@/lib/gtag";
 
 type AppState = "idle" | "camera" | "preview" | "stamped";
 
@@ -139,6 +140,7 @@ export default function StampCameraPage() {
     setError(null);
     setSourceType("camera");
     setAppState("camera");
+    trackEvent("stamp_camera_open", "camera", "photo_stamp");
   };
 
   const handleUploadClick = () => {
@@ -169,6 +171,7 @@ export default function StampCameraPage() {
       const imageData = event.target?.result as string;
       setCapturedImage(imageData);
       setAppState("preview");
+      trackEvent("stamp_image_upload", "upload", "photo_stamp");
     };
     reader.onerror = () => {
       setError("Failed to read image file");
@@ -182,6 +185,7 @@ export default function StampCameraPage() {
   const handleCapture = useCallback((imageData: string) => {
     setCapturedImage(imageData);
     setAppState("preview");
+    trackEvent("stamp_photo_capture", "camera", "photo_stamp");
   }, []);
 
   const handleCropComplete = useCallback((croppedData: string) => {
@@ -224,6 +228,7 @@ export default function StampCameraPage() {
     link.download = `photo-stamp-${Date.now()}.png`;
     link.href = stampedImage;
     link.click();
+    trackEvent("stamp_download", "square", "photo_stamp");
   };
 
   // Generate IG Story version (9:16 aspect ratio)
@@ -352,6 +357,7 @@ export default function StampCameraPage() {
           text: locationText ? `Memories from ${locationText}` : "My Photo Stamp",
           files: [storyFile],
         });
+        trackEvent("stamp_share_ig", "web_share", "photo_stamp");
       } else {
         // Fallback: Download the story image
         const url = URL.createObjectURL(storyBlob);
@@ -361,6 +367,7 @@ export default function StampCameraPage() {
         link.click();
         URL.revokeObjectURL(url);
         setShareError("Download complete! Open Instagram and share to your Story.");
+        trackEvent("stamp_share_ig", "fallback_download", "photo_stamp");
       }
     } catch (err) {
       if (err instanceof Error) {
@@ -391,6 +398,7 @@ export default function StampCameraPage() {
       link.href = url;
       link.click();
       URL.revokeObjectURL(url);
+      trackEvent("stamp_download", "story", "photo_stamp");
     } catch (err) {
       if (err instanceof Error) {
         setShareError(err.message);
@@ -632,7 +640,10 @@ export default function StampCameraPage() {
                 {/* Mode Toggle */}
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setUseOriginal(false)}
+                    onClick={() => {
+                      setUseOriginal(false);
+                      trackEvent("stamp_style_change", "vintage", "photo_stamp");
+                    }}
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       !useOriginal
                         ? "bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 shadow-md"
@@ -643,7 +654,10 @@ export default function StampCameraPage() {
                     Vintage
                   </button>
                   <button
-                    onClick={() => setUseOriginal(true)}
+                    onClick={() => {
+                      setUseOriginal(true);
+                      trackEvent("stamp_style_change", "original", "photo_stamp");
+                    }}
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                       useOriginal
                         ? "bg-amber-500 text-white shadow-md"
@@ -668,7 +682,10 @@ export default function StampCameraPage() {
                     ].map((c) => (
                       <button
                         key={c.id}
-                        onClick={() => setVintageColor(c.id as typeof vintageColor)}
+                        onClick={() => {
+                          setVintageColor(c.id as typeof vintageColor);
+                          trackEvent("stamp_color_change", c.id, "photo_stamp");
+                        }}
                         className={`w-7 h-7 rounded-full ${c.color} transition-all hover:scale-110 ${
                           vintageColor === c.id
                             ? `ring-2 ${c.ring} ring-offset-2 ring-offset-white dark:ring-offset-zinc-900`
@@ -683,7 +700,11 @@ export default function StampCameraPage() {
                 {/* Postmark Toggle */}
                 <div className="flex items-center gap-3 pt-2 border-t border-zinc-200 dark:border-zinc-700">
                   <button
-                    onClick={() => setPostmarkEnabled(!postmarkEnabled)}
+                    onClick={() => {
+                      const newState = !postmarkEnabled;
+                      setPostmarkEnabled(newState);
+                      trackEvent("stamp_postmark_toggle", newState ? "on" : "off", "photo_stamp");
+                    }}
                     className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                       postmarkEnabled
                         ? "bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900"
