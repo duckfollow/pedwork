@@ -72,18 +72,16 @@ export default function StampFrame({
 }: StampFrameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isReady, setIsReady] = useState(false);
+  const loadedImageRef = useRef<HTMLImageElement | null>(null);
+  const previousImageSrcRef = useRef<string | null>(null);
 
-  const renderStamp = useCallback(() => {
+  // Render the stamp using cached image
+  const renderWithImage = useCallback((img: HTMLImageElement) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-
-    img.onload = () => {
       // Stamp dimensions - reduced padding for ~78% photo coverage
       const photoSize = 500;
       const borderWidth = 28;
@@ -646,6 +644,28 @@ export default function StampFrame({
         const stampData = canvas.toDataURL("image/png", 1.0);
         onStampReady(stampData);
       }
+  }, [location, useOriginal, vintageColor, postmark, onStampReady]);
+
+  // Load image when imageSrc changes
+  useEffect(() => {
+    if (!imageSrc) return;
+
+    // If the image source hasn't changed and we have a cached image, just re-render
+    if (imageSrc === previousImageSrcRef.current && loadedImageRef.current) {
+      renderWithImage(loadedImageRef.current);
+      return;
+    }
+
+    // New image source - need to load it
+    setIsReady(false);
+    previousImageSrcRef.current = imageSrc;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+      loadedImageRef.current = img;
+      renderWithImage(img);
     };
 
     img.onerror = () => {
@@ -653,14 +673,14 @@ export default function StampFrame({
     };
 
     img.src = imageSrc;
-  }, [imageSrc, location, useOriginal, vintageColor, postmark, onStampReady]);
+  }, [imageSrc, renderWithImage]);
 
+  // Re-render when settings change (without loading indicator)
   useEffect(() => {
-    if (imageSrc) {
-      setIsReady(false);
-      renderStamp();
+    if (loadedImageRef.current && isReady) {
+      renderWithImage(loadedImageRef.current);
     }
-  }, [imageSrc, renderStamp]);
+  }, [location, useOriginal, vintageColor, postmark, renderWithImage, isReady]);
 
   return (
     <div className="relative w-full max-w-md mx-auto">
