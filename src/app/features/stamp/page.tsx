@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Download, RefreshCcw, Camera, AlertCircle, Stamp, MapPin, Loader2, Upload, ImageIcon, Palette } from "lucide-react";
+import { Download, RefreshCcw, Camera, AlertCircle, Stamp, MapPin, Loader2, Upload, ImageIcon, Palette, Circle, Share2 } from "lucide-react";
 import CameraPreview from "@/components/CameraPreview";
 import ImageCropper from "@/components/ImageCropper";
 import StampFrame from "@/components/StampFrame";
@@ -24,13 +24,42 @@ export default function StampCameraPage() {
   const [sourceType, setSourceType] = useState<"camera" | "upload">("camera");
   const [useOriginal, setUseOriginal] = useState(false);
   const [vintageColor, setVintageColor] = useState<"blue" | "sepia" | "green" | "red" | "purple">("blue");
+  const [postmarkEnabled, setPostmarkEnabled] = useState(false);
+  const [postmarkPosition, setPostmarkPosition] = useState<"bottom-right" | "bottom-left" | "top-right">("bottom-right");
+  const [postmarkColor, setPostmarkColor] = useState<"blue" | "red" | "black">("blue");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Share state
+  const [canShare, setCanShare] = useState(false);
+  const [isGeneratingStory, setIsGeneratingStory] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
   
   // Location state
   const [location, setLocation] = useState<LocationData | null>(null);
   const [locationText, setLocationText] = useState<string | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+
+  // Check Web Share API support on mount
+  useEffect(() => {
+    // Check if Web Share API with files is supported
+    const checkShareSupport = async () => {
+      if (navigator.share && navigator.canShare) {
+        // Test if file sharing is supported
+        const testFile = new File(["test"], "test.png", { type: "image/png" });
+        const testData = { files: [testFile] };
+        try {
+          const supported = navigator.canShare(testData);
+          setCanShare(supported);
+        } catch {
+          setCanShare(false);
+        }
+      } else {
+        setCanShare(false);
+      }
+    };
+    checkShareSupport();
+  }, []);
 
   // Request geolocation on mount (non-blocking)
   useEffect(() => {
@@ -181,6 +210,9 @@ export default function StampCameraPage() {
     setError(null);
     setUseOriginal(false);
     setVintageColor("blue");
+    setPostmarkEnabled(false);
+    setPostmarkPosition("bottom-right");
+    setPostmarkColor("blue");
     setAppState("idle");
   };
 
@@ -191,6 +223,180 @@ export default function StampCameraPage() {
     link.download = `photo-stamp-${Date.now()}.png`;
     link.href = stampedImage;
     link.click();
+  };
+
+  // Generate IG Story version (9:16 aspect ratio)
+  const generateStoryImage = useCallback((): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      if (!stampedImage) {
+        reject(new Error("No stamp image available"));
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        // IG Story dimensions: 1080x1920 (9:16)
+        const storyWidth = 1080;
+        const storyHeight = 1920;
+        
+        const canvas = document.createElement("canvas");
+        canvas.width = storyWidth;
+        canvas.height = storyHeight;
+        const ctx = canvas.getContext("2d");
+        
+        if (!ctx) {
+          reject(new Error("Could not create canvas context"));
+          return;
+        }
+
+        // Create gradient background
+        const gradient = ctx.createLinearGradient(0, 0, storyWidth, storyHeight);
+        gradient.addColorStop(0, "#fef3c7"); // amber-100
+        gradient.addColorStop(0.5, "#fed7aa"); // orange-200
+        gradient.addColorStop(1, "#fef9c3"); // yellow-100
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, storyWidth, storyHeight);
+
+        // Add subtle pattern overlay
+        ctx.globalAlpha = 0.03;
+        for (let x = 0; x < storyWidth; x += 60) {
+          for (let y = 0; y < storyHeight; y += 60) {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(x + 28, y + 28, 4, 4);
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        // Calculate stamp size - make it prominent but leave breathing room
+        // Stamp should be about 85% of width, centered
+        const stampMaxWidth = storyWidth * 0.85;
+        const stampMaxHeight = storyHeight * 0.55; // Leave room for safe areas
+        
+        const stampAspectRatio = img.width / img.height;
+        let stampWidth: number;
+        let stampHeight: number;
+        
+        if (stampAspectRatio > stampMaxWidth / stampMaxHeight) {
+          stampWidth = stampMaxWidth;
+          stampHeight = stampWidth / stampAspectRatio;
+        } else {
+          stampHeight = stampMaxHeight;
+          stampWidth = stampHeight * stampAspectRatio;
+        }
+
+        // Center stamp, slightly above center for visual balance
+        const stampX = (storyWidth - stampWidth) / 2;
+        const stampY = (storyHeight - stampHeight) / 2 - 50;
+
+        // Add shadow behind stamp
+        ctx.shadowColor = "rgba(0, 0, 0, 0.15)";
+        ctx.shadowBlur = 40;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 20;
+        
+        // Draw stamp
+        ctx.drawImage(img, stampX, stampY, stampWidth, stampHeight);
+        
+        // Reset shadow
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+        // Add decorative text at bottom
+        ctx.font = "bold 28px 'Courier New', monospace";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+        ctx.textAlign = "center";
+        ctx.fillText("✦ PHOTO STAMP BY pedwork.co ✦", storyWidth / 2, storyHeight - 120);
+        
+        if (locationText) {
+          ctx.font = "18px 'Courier New', monospace";
+          ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+          ctx.fillText(`From ${locationText}`, storyWidth / 2, storyHeight - 85);
+        }
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Failed to create image blob"));
+          }
+        }, "image/png", 1.0);
+      };
+      
+      img.onerror = () => {
+        reject(new Error("Failed to load stamp image"));
+      };
+      
+      img.src = stampedImage;
+    });
+  }, [stampedImage, locationText]);
+
+  // Share to Instagram Story
+  const handleShareToIG = async () => {
+    if (!stampedImage) return;
+    
+    setIsGeneratingStory(true);
+    setShareError(null);
+    
+    try {
+      const storyBlob = await generateStoryImage();
+      const storyFile = new File([storyBlob], `photo-stamp-story-${Date.now()}.png`, {
+        type: "image/png",
+      });
+
+      if (canShare) {
+        await navigator.share({
+          title: "Photo Stamp by pedwork.co",
+          text: locationText ? `Memories from ${locationText}` : "My Photo Stamp",
+          files: [storyFile],
+        });
+      } else {
+        // Fallback: Download the story image
+        const url = URL.createObjectURL(storyBlob);
+        const link = document.createElement("a");
+        link.download = `photo-stamp-story-${Date.now()}.png`;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+        setShareError("Download complete! Open Instagram and share to your Story.");
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        // User cancelled share - not an error
+        if (err.name === "AbortError") {
+          // Do nothing
+        } else {
+          setShareError(err.message);
+        }
+      }
+    } finally {
+      setIsGeneratingStory(false);
+    }
+  };
+
+  // Download story image directly
+  const handleDownloadStory = async () => {
+    if (!stampedImage) return;
+    
+    setIsGeneratingStory(true);
+    setShareError(null);
+    
+    try {
+      const storyBlob = await generateStoryImage();
+      const url = URL.createObjectURL(storyBlob);
+      const link = document.createElement("a");
+      link.download = `photo-stamp-story-${Date.now()}.png`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      if (err instanceof Error) {
+        setShareError(err.message);
+      }
+    } finally {
+      setIsGeneratingStory(false);
+    }
   };
 
   const handleError = (errorMessage: string) => {
@@ -472,6 +678,67 @@ export default function StampCameraPage() {
                     ))}
                   </div>
                 )}
+
+                {/* Postmark Toggle */}
+                <div className="flex items-center gap-3 pt-2 border-t border-zinc-200 dark:border-zinc-700">
+                  <button
+                    onClick={() => setPostmarkEnabled(!postmarkEnabled)}
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      postmarkEnabled
+                        ? "bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900"
+                        : "bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700"
+                    }`}
+                  >
+                    <Circle className="w-4 h-4" />
+                    Postmark
+                  </button>
+                  
+                  {postmarkEnabled && (
+                    <>
+                      {/* Position Selector */}
+                      <div className="flex items-center gap-1">
+                        {[
+                          { id: "bottom-right", label: "↘" },
+                          { id: "bottom-left", label: "↙" },
+                          { id: "top-right", label: "↗" },
+                        ].map((pos) => (
+                          <button
+                            key={pos.id}
+                            onClick={() => setPostmarkPosition(pos.id as typeof postmarkPosition)}
+                            className={`w-7 h-7 rounded text-sm font-bold transition-all ${
+                              postmarkPosition === pos.id
+                                ? "bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900"
+                                : "bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                            }`}
+                            aria-label={pos.id}
+                          >
+                            {pos.label}
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {/* Postmark Color */}
+                      <div className="flex items-center gap-1">
+                        {[
+                          { id: "blue", color: "bg-blue-900" },
+                          { id: "red", color: "bg-red-900" },
+                          { id: "black", color: "bg-zinc-900" },
+                        ].map((c) => (
+                          <button
+                            key={c.id}
+                            onClick={() => setPostmarkColor(c.id as typeof postmarkColor)}
+                            className={`w-6 h-6 rounded-full ${c.color} transition-all hover:scale-110 ${
+                              postmarkColor === c.id
+                                ? "ring-2 ring-zinc-400 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900"
+                                : "opacity-50 hover:opacity-100"
+                            }`}
+                            aria-label={`${c.id} postmark`}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Stamp Preview */}
@@ -480,6 +747,11 @@ export default function StampCameraPage() {
                 location={locationText}
                 useOriginal={useOriginal}
                 vintageColor={vintageColor}
+                postmark={{
+                  enabled: postmarkEnabled,
+                  position: postmarkPosition,
+                  color: postmarkColor,
+                }}
                 onStampReady={handleStampReady} 
               />
 
@@ -494,22 +766,77 @@ export default function StampCameraPage() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
-                <button
-                  onClick={handleRetake}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all active:scale-95 shadow-sm w-full sm:w-auto justify-center"
-                >
-                  <RefreshCcw className="w-4 h-4" />
-                  {sourceType === "camera" ? "Retake" : "Choose Another"}
-                </button>
-                <button
-                  onClick={handleDownload}
-                  disabled={!stampedImage}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-zinc-400 disabled:to-zinc-500 text-white font-medium rounded-xl shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 disabled:shadow-none transition-all active:scale-95 w-full sm:w-auto justify-center"
-                >
-                  <Download className="w-4 h-4" />
-                  Download Stamp
-                </button>
+              <div className="flex flex-col items-center gap-4 mt-6">
+                {/* Primary Actions Row */}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+                  <button
+                    onClick={handleRetake}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all active:scale-95 shadow-sm w-full sm:w-auto justify-center"
+                  >
+                    <RefreshCcw className="w-4 h-4" />
+                    {sourceType === "camera" ? "Retake" : "Choose Another"}
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    disabled={!stampedImage}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-zinc-400 disabled:to-zinc-500 text-white font-medium rounded-xl shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 disabled:shadow-none transition-all active:scale-95 w-full sm:w-auto justify-center"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
+                </div>
+
+                {/* Share to IG Story Section */}
+                <div className="w-full pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                  <div className="flex flex-col items-center gap-2">
+                    <button
+                      onClick={handleShareToIG}
+                      disabled={!stampedImage || isGeneratingStory}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 disabled:from-zinc-400 disabled:to-zinc-500 text-white font-semibold rounded-xl shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 disabled:shadow-none transition-all active:scale-95 w-full sm:w-auto justify-center"
+                    >
+                      {isGeneratingStory ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Preparing...
+                        </>
+                      ) : (
+                        <>
+                          <Share2 className="w-5 h-5" />
+                          Share to IG Story
+                        </>
+                      )}
+                    </button>
+                    
+                    {/* Hint text for non-share browsers */}
+                    {!canShare && (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
+                        Downloads 9:16 image for Instagram Story
+                      </p>
+                    )}
+                    
+                    {/* Download story as alternative */}
+                    {canShare && (
+                      <button
+                        onClick={handleDownloadStory}
+                        disabled={!stampedImage || isGeneratingStory}
+                        className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 underline underline-offset-4 transition-colors disabled:opacity-50"
+                      >
+                        Or download story image
+                      </button>
+                    )}
+                    
+                    {/* Share error/success message */}
+                    {shareError && (
+                      <p className={`text-sm text-center px-4 py-2 rounded-lg ${
+                        shareError.includes("complete") 
+                          ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" 
+                          : "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20"
+                      }`}>
+                        {shareError}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Reset Link */}

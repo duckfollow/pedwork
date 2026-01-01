@@ -3,12 +3,21 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 
 type VintageColor = "blue" | "sepia" | "green" | "red" | "purple";
+type PostmarkPosition = "bottom-right" | "bottom-left" | "top-right";
+type PostmarkColor = "blue" | "red" | "black";
+
+interface PostmarkOptions {
+  enabled: boolean;
+  position: PostmarkPosition;
+  color: PostmarkColor;
+}
 
 interface StampFrameProps {
   imageSrc: string;
   location?: string | null;
   useOriginal?: boolean;
   vintageColor?: VintageColor;
+  postmark?: PostmarkOptions;
   onStampReady?: (stampDataUrl: string) => void;
 }
 
@@ -46,7 +55,21 @@ const colorPalettes: Record<VintageColor, { dark: [number, number, number]; ligh
   },
 };
 
-export default function StampFrame({ imageSrc, location, useOriginal = false, vintageColor = "blue", onStampReady }: StampFrameProps) {
+// Postmark ink colors
+const postmarkColors: Record<PostmarkColor, string> = {
+  blue: "rgba(20, 40, 80, 0.75)",
+  red: "rgba(120, 30, 30, 0.75)",
+  black: "rgba(30, 30, 30, 0.75)",
+};
+
+export default function StampFrame({ 
+  imageSrc, 
+  location, 
+  useOriginal = false, 
+  vintageColor = "blue", 
+  postmark,
+  onStampReady 
+}: StampFrameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isReady, setIsReady] = useState(false);
 
@@ -340,6 +363,282 @@ export default function StampFrame({ imageSrc, location, useOriginal = false, vi
 
       ctx.restore();
 
+      // ===== POSTMARK (Half-circle design - clipped to stamp) =====
+      if (postmark?.enabled) {
+        // Increased size by ~20%
+        const postmarkRadius = 110;
+        const innerRadius = 85;
+        
+        // Position at stamp edge - postmark center at edge so half is visible
+        // But will be clipped to stay within stamp boundary
+        let postmarkX: number;
+        let postmarkY: number;
+        let rotation: number;
+        let arcStart: number;
+        let arcEnd: number;
+        
+        switch (postmark.position) {
+          case "bottom-left":
+            // Position at left edge, show RIGHT half of circle
+            postmarkX = -10;
+            postmarkY = photoY + photoSize - 40;
+            rotation = 15 * (Math.PI / 180);
+            arcStart = -0.55 * Math.PI;  // Right half
+            arcEnd = 0.55 * Math.PI;
+            break;
+          case "top-right":
+            // Position at right edge, show LEFT half of circle
+            postmarkX = stampWidth + 10;
+            postmarkY = photoY + 50;
+            rotation = -12 * (Math.PI / 180);
+            arcStart = 0.45 * Math.PI;  // Left half
+            arcEnd = 1.55 * Math.PI;
+            break;
+          case "bottom-right":
+          default:
+            // Position at right edge, show LEFT half of circle
+            postmarkX = stampWidth + 10;
+            postmarkY = photoY + photoSize - 30;
+            rotation = -12 * (Math.PI / 180);
+            arcStart = 0.45 * Math.PI;  // Left half
+            arcEnd = 1.55 * Math.PI;
+            break;
+        }
+        
+        const arcSpan = arcEnd - arcStart;
+        
+        const inkColor = postmarkColors[postmark.color];
+        
+        ctx.save();
+        
+        // Create clipping region using the stamp's perforated boundary
+        // This ensures postmark never renders outside the stamp
+        ctx.beginPath();
+        const clipTopOffset = (stampWidth - topScallops * perfSpacing) / 2 + perfSpacing / 2;
+        for (let i = 0; i < topScallops; i++) {
+          const x = clipTopOffset + i * perfSpacing;
+          if (i === 0) {
+            ctx.moveTo(x - perfRadius, 0);
+          }
+          ctx.arc(x, 0, perfRadius, Math.PI, 0, true);
+          if (i < topScallops - 1) {
+            ctx.lineTo(clipTopOffset + (i + 1) * perfSpacing - perfRadius, 0);
+          }
+        }
+        // Right edge
+        const clipLeftOffset = (stampHeight - leftScallops * perfSpacing) / 2 + perfSpacing / 2;
+        ctx.lineTo(stampWidth, clipLeftOffset - perfRadius);
+        for (let i = 0; i < leftScallops; i++) {
+          const y = clipLeftOffset + i * perfSpacing;
+          ctx.arc(stampWidth, y, perfRadius, -Math.PI / 2, Math.PI / 2, true);
+          if (i < leftScallops - 1) {
+            ctx.lineTo(stampWidth, clipLeftOffset + (i + 1) * perfSpacing - perfRadius);
+          }
+        }
+        // Bottom edge
+        ctx.lineTo(clipTopOffset + (topScallops - 1) * perfSpacing + perfRadius, stampHeight);
+        for (let i = topScallops - 1; i >= 0; i--) {
+          const x = clipTopOffset + i * perfSpacing;
+          ctx.arc(x, stampHeight, perfRadius, 0, Math.PI, true);
+          if (i > 0) {
+            ctx.lineTo(clipTopOffset + (i - 1) * perfSpacing + perfRadius, stampHeight);
+          }
+        }
+        // Left edge
+        ctx.lineTo(0, clipLeftOffset + (leftScallops - 1) * perfSpacing + perfRadius);
+        for (let i = leftScallops - 1; i >= 0; i--) {
+          const y = clipLeftOffset + i * perfSpacing;
+          ctx.arc(0, y, perfRadius, Math.PI / 2, -Math.PI / 2, true);
+          if (i > 0) {
+            ctx.lineTo(0, clipLeftOffset + (i - 1) * perfSpacing + perfRadius);
+          }
+        }
+        ctx.closePath();
+        ctx.clip();
+        
+        ctx.translate(postmarkX, postmarkY);
+        ctx.rotate(rotation);
+        
+        // Apply blur for softer edges
+        ctx.filter = "blur(0.7px)";
+        
+        // Use multiply blend mode for natural ink absorption
+        ctx.globalCompositeOperation = "multiply";
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        
+        // === Draw multiple passes for ink absorption effect ===
+        
+        // Pass 1: Soft outer glow/bleed (very faint) - increased stroke for larger size
+        ctx.strokeStyle = inkColor;
+        ctx.globalAlpha = 0.15;
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.arc(0, 0, postmarkRadius, arcStart + 0.1, arcEnd - 0.1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 0, innerRadius, arcStart + 0.1, arcEnd - 0.1);
+        ctx.stroke();
+        
+        // Pass 2: Main stroke with reduced opacity - proportionally thicker
+        ctx.globalAlpha = 0.5;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, postmarkRadius, arcStart, arcEnd);
+        ctx.stroke();
+        
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, innerRadius, arcStart, arcEnd);
+        ctx.stroke();
+        
+        // Pass 3: Variable intensity along the arc (simulates uneven ink)
+        ctx.lineWidth = 2.5;
+        for (let i = 0; i < 8; i++) {
+          const segmentStart = arcStart + (arcSpan / 8) * i;
+          const segmentEnd = segmentStart + (arcSpan / 8);
+          const intensity = 0.35 + Math.random() * 0.2; // 35-55% opacity variation
+          
+          ctx.globalAlpha = intensity;
+          ctx.beginPath();
+          ctx.arc(0, 0, postmarkRadius, segmentStart, segmentEnd);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, innerRadius, segmentStart, segmentEnd);
+          ctx.stroke();
+        }
+        
+        // Fade effect at arc ends (gradual fade-out)
+        for (let fade = 0; fade < 5; fade++) {
+          const fadeAlpha = 0.08 - fade * 0.015;
+          ctx.globalAlpha = Math.max(0.01, fadeAlpha);
+          ctx.lineWidth = 3.5 - fade * 0.5;
+          
+          // Start fade
+          ctx.beginPath();
+          ctx.arc(0, 0, postmarkRadius, arcStart - 0.02 * fade, arcStart + 0.08);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, innerRadius, arcStart - 0.02 * fade, arcStart + 0.08);
+          ctx.stroke();
+          
+          // End fade
+          ctx.beginPath();
+          ctx.arc(0, 0, postmarkRadius, arcEnd - 0.08, arcEnd + 0.02 * fade);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, innerRadius, arcEnd - 0.08, arcEnd + 0.02 * fade);
+          ctx.stroke();
+        }
+        
+        // Reset filter for text
+        ctx.filter = "none";
+        ctx.globalCompositeOperation = "multiply";
+        
+        // Date text curved along visible arc - larger font for bigger postmark
+        ctx.fillStyle = inkColor;
+        ctx.font = "bold 13px 'Courier New', monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        
+        const postmarkDate = date.toLocaleDateString("en-US", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }).toUpperCase();
+        
+        const dateChars = postmarkDate.split("");
+        const dateArcRadius = (postmarkRadius + innerRadius) / 2;
+        
+        // Calculate text start angle based on position (center of visible arc, upper portion)
+        const arcCenter = (arcStart + arcEnd) / 2;
+        const isLeftHalf = postmark.position !== "bottom-left"; // bottom-left shows right half
+        const dateStartAngle = isLeftHalf 
+          ? arcCenter - 0.35  // Upper portion of left half
+          : arcCenter - 0.35; // Upper portion of right half
+        const dateCharSpacing = 0.08;
+        
+        dateChars.forEach((char, i) => {
+          const angle = dateStartAngle + i * dateCharSpacing;
+          if (angle >= arcStart + 0.1 && angle <= arcEnd - 0.1) {
+            const charOpacity = 0.45 + Math.random() * 0.15;
+            ctx.globalAlpha = charOpacity;
+            
+            const x = Math.cos(angle) * dateArcRadius;
+            const y = Math.sin(angle) * dateArcRadius;
+            
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle + Math.PI / 2);
+            ctx.fillText(char, 0, 0);
+            ctx.restore();
+          }
+        });
+        
+        // Location text curved along visible bottom portion of arc
+        if (location) {
+          const locText = location.toUpperCase();
+          const locChars = locText.length > 14 ? locText.substring(0, 14).split("") : locText.split("");
+          const locArcRadius = (postmarkRadius + innerRadius) / 2;
+          
+          // Position at lower portion of visible arc
+          const locStartAngle = isLeftHalf
+            ? arcCenter + 0.35  // Lower portion of left half
+            : arcCenter + 0.35; // Lower portion of right half
+          const locCharSpacing = 0.07;
+          
+          ctx.font = "bold 12px 'Courier New', monospace";
+          locChars.forEach((char, i) => {
+            const angle = locStartAngle - i * locCharSpacing;
+            if (angle >= arcStart + 0.1 && angle <= arcEnd - 0.1) {
+              const charOpacity = 0.4 + Math.random() * 0.15;
+              ctx.globalAlpha = charOpacity;
+              
+              const x = Math.cos(angle) * locArcRadius;
+              const y = Math.sin(angle) * locArcRadius;
+              
+              ctx.save();
+              ctx.translate(x, y);
+              ctx.rotate(angle - Math.PI / 2);
+              ctx.fillText(char, 0, 0);
+              ctx.restore();
+            }
+          });
+        }
+        
+        // Ink absorption texture (paper grain effect)
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.globalAlpha = 0.08;
+        for (let i = 0; i < 100; i++) {
+          const angle = arcStart + Math.random() * arcSpan;
+          const dist = innerRadius - 15 + Math.random() * (postmarkRadius - innerRadius + 30);
+          const x = Math.cos(angle) * dist;
+          const y = Math.sin(angle) * dist;
+          const size = Math.random() * 1.8 + 0.3;
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        // Additional texture for paper absorption simulation
+        ctx.globalAlpha = 0.05;
+        for (let i = 0; i < 40; i++) {
+          const angle = arcStart + Math.random() * arcSpan;
+          const dist = innerRadius + Math.random() * (postmarkRadius - innerRadius);
+          const x = Math.cos(angle) * dist;
+          const y = Math.sin(angle) * dist;
+          ctx.beginPath();
+          ctx.arc(x, y, Math.random() * 3 + 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 1;
+        ctx.filter = "none";
+        
+        ctx.restore();
+      }
+
       setIsReady(true);
 
       // Notify parent with the stamp data URL
@@ -354,7 +653,7 @@ export default function StampFrame({ imageSrc, location, useOriginal = false, vi
     };
 
     img.src = imageSrc;
-  }, [imageSrc, location, useOriginal, vintageColor, onStampReady]);
+  }, [imageSrc, location, useOriginal, vintageColor, postmark, onStampReady]);
 
   useEffect(() => {
     if (imageSrc) {
