@@ -44,7 +44,8 @@ export default function StampCameraPage() {
   useEffect(() => {
     // Check if Web Share API with files is supported
     const checkShareSupport = async () => {
-      if (navigator.share && navigator.canShare) {
+      // Check if share API exists on navigator
+      if (typeof navigator !== "undefined" && "share" in navigator && "canShare" in navigator) {
         // Test if file sharing is supported
         const testFile = new File(["test"], "test.png", { type: "image/png" });
         const testData = { files: [testFile] };
