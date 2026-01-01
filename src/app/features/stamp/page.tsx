@@ -381,8 +381,15 @@ export default function StampCameraPage() {
         return;
       }
 
-      const img = new Image();
-      img.onload = () => {
+      // Load both the stamp image and background image
+      const stampImg = new Image();
+      const bgImg = new Image();
+      let stampLoaded = false;
+      let bgLoaded = false;
+
+      const tryRender = () => {
+        if (!stampLoaded || !bgLoaded) return;
+
         // IG Story dimensions: 1080x1920 (9:16)
         const storyWidth = 1080;
         const storyHeight = 1920;
@@ -397,30 +404,36 @@ export default function StampCameraPage() {
           return;
         }
 
-        // Create gradient background
-        const gradient = ctx.createLinearGradient(0, 0, storyWidth, storyHeight);
-        gradient.addColorStop(0, "#fef3c7"); // amber-100
-        gradient.addColorStop(0.5, "#fed7aa"); // orange-200
-        gradient.addColorStop(1, "#fef9c3"); // yellow-100
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, storyWidth, storyHeight);
+        // Draw crumpled paper background (cover the entire canvas)
+        const bgAspect = bgImg.width / bgImg.height;
+        const canvasAspect = storyWidth / storyHeight;
+        let bgDrawWidth: number;
+        let bgDrawHeight: number;
+        let bgDrawX: number;
+        let bgDrawY: number;
 
-        // Add subtle pattern overlay
-        ctx.globalAlpha = 0.03;
-        for (let x = 0; x < storyWidth; x += 60) {
-          for (let y = 0; y < storyHeight; y += 60) {
-            ctx.fillStyle = "#000";
-            ctx.fillRect(x + 28, y + 28, 4, 4);
-          }
+        if (bgAspect > canvasAspect) {
+          // Background is wider, fit by height
+          bgDrawHeight = storyHeight;
+          bgDrawWidth = bgDrawHeight * bgAspect;
+          bgDrawX = (storyWidth - bgDrawWidth) / 2;
+          bgDrawY = 0;
+        } else {
+          // Background is taller, fit by width
+          bgDrawWidth = storyWidth;
+          bgDrawHeight = bgDrawWidth / bgAspect;
+          bgDrawX = 0;
+          bgDrawY = (storyHeight - bgDrawHeight) / 2;
         }
-        ctx.globalAlpha = 1;
+        
+        ctx.drawImage(bgImg, bgDrawX, bgDrawY, bgDrawWidth, bgDrawHeight);
 
         // Calculate stamp size - make it prominent but leave breathing room
         // Stamp should be about 85% of width, centered
         const stampMaxWidth = storyWidth * 0.85;
         const stampMaxHeight = storyHeight * 0.55; // Leave room for safe areas
         
-        const stampAspectRatio = img.width / img.height;
+        const stampAspectRatio = stampImg.width / stampImg.height;
         let stampWidth: number;
         let stampHeight: number;
         
@@ -443,7 +456,7 @@ export default function StampCameraPage() {
         ctx.shadowOffsetY = 20;
         
         // Draw stamp
-        ctx.drawImage(img, stampX, stampY, stampWidth, stampHeight);
+        ctx.drawImage(stampImg, stampX, stampY, stampWidth, stampHeight);
         
         // Reset shadow
         ctx.shadowColor = "transparent";
@@ -453,13 +466,13 @@ export default function StampCameraPage() {
 
         // Add decorative text at bottom
         ctx.font = "bold 28px 'Courier New', monospace";
-        ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
         ctx.textAlign = "center";
         ctx.fillText("✦ PHOTO STAMP BY pedwork.co ✦", storyWidth / 2, storyHeight - 120);
         
         if (locationText) {
           ctx.font = "18px 'Courier New', monospace";
-          ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+          ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
           ctx.fillText(`From ${locationText}`, storyWidth / 2, storyHeight - 85);
         }
 
@@ -471,12 +484,27 @@ export default function StampCameraPage() {
           }
         }, "image/png", 1.0);
       };
-      
-      img.onerror = () => {
-        reject(new Error("Failed to load stamp image"));
+
+      stampImg.onload = () => {
+        stampLoaded = true;
+        tryRender();
       };
       
-      img.src = stampedImage;
+      stampImg.onerror = () => {
+        reject(new Error("Failed to load stamp image"));
+      };
+
+      bgImg.onload = () => {
+        bgLoaded = true;
+        tryRender();
+      };
+
+      bgImg.onerror = () => {
+        reject(new Error("Failed to load background image"));
+      };
+      
+      stampImg.src = stampedImage;
+      bgImg.src = "/images/Crumpled-white-paper-texture-background-768x512.jpg";
     });
   }, [stampedImage, locationText]);
 
