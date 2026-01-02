@@ -21,6 +21,9 @@ interface StampFrameProps {
   onStampReady?: (stampDataUrl: string) => void;
 }
 
+// Paper texture path
+const PAPER_TEXTURE_PATH = "/images/Paper_Texture.png";
+
 // Color palettes for different vintage styles
 const colorPalettes: Record<VintageColor, { dark: [number, number, number]; light: [number, number, number]; border: string; text: string }> = {
   blue: {
@@ -74,6 +77,23 @@ export default function StampFrame({
   const [isReady, setIsReady] = useState(false);
   const loadedImageRef = useRef<HTMLImageElement | null>(null);
   const previousImageSrcRef = useRef<string | null>(null);
+  const paperTextureRef = useRef<HTMLImageElement | null>(null);
+  const [textureLoaded, setTextureLoaded] = useState(false);
+
+  // Load paper texture on mount
+  useEffect(() => {
+    const textureImg = new Image();
+    textureImg.crossOrigin = "anonymous";
+    textureImg.onload = () => {
+      paperTextureRef.current = textureImg;
+      setTextureLoaded(true);
+    };
+    textureImg.onerror = () => {
+      console.warn("Failed to load paper texture, continuing without it");
+      setTextureLoaded(true); // Continue without texture
+    };
+    textureImg.src = PAPER_TEXTURE_PATH;
+  }, []);
 
   // Render the stamp using cached image
   const renderWithImage = useCallback((img: HTMLImageElement) => {
@@ -238,6 +258,52 @@ export default function StampFrame({
         }
         
         ctx.drawImage(tempCanvas, photoX, photoY);
+      }
+
+      // ===== PAPER TEXTURE OVERLAY =====
+      // Apply subtle paper texture to make photo feel printed on real paper
+      if (paperTextureRef.current) {
+        ctx.save();
+        
+        // Create a temporary canvas for the texture overlay
+        const textureCanvas = document.createElement("canvas");
+        textureCanvas.width = photoSize;
+        textureCanvas.height = photoSize;
+        const textureCtx = textureCanvas.getContext("2d");
+        
+        if (textureCtx) {
+          const texture = paperTextureRef.current;
+          
+          // Tile the texture seamlessly across the photo area
+          // This ensures proper scaling for different resolutions
+          const texturePattern = textureCtx.createPattern(texture, "repeat");
+          if (texturePattern) {
+            textureCtx.fillStyle = texturePattern;
+            textureCtx.fillRect(0, 0, photoSize, photoSize);
+          } else {
+            // Fallback: scale texture to fit if pattern creation fails
+            textureCtx.drawImage(texture, 0, 0, photoSize, photoSize);
+          }
+          
+          // Apply slight blur for softness (0.4px for subtle effect)
+          ctx.filter = "blur(0.4px)";
+          
+          // Use overlay blend mode - affects highlights more than shadows
+          ctx.globalCompositeOperation = "overlay";
+          
+          // Subtle opacity: 8% for clean, premium look
+          ctx.globalAlpha = 0.08;
+          
+          // Draw texture over the photo area
+          ctx.drawImage(textureCanvas, photoX, photoY);
+          
+          // Reset context
+          ctx.filter = "none";
+          ctx.globalCompositeOperation = "source-over";
+          ctx.globalAlpha = 1;
+        }
+        
+        ctx.restore();
       }
 
       // Draw thin border around photo
@@ -644,7 +710,7 @@ export default function StampFrame({
         const stampData = canvas.toDataURL("image/png", 1.0);
         onStampReady(stampData);
       }
-  }, [location, useOriginal, vintageColor, postmark, onStampReady]);
+  }, [location, useOriginal, vintageColor, postmark, onStampReady, textureLoaded]);
 
   // Load image when imageSrc changes
   useEffect(() => {
@@ -673,22 +739,26 @@ export default function StampFrame({
     };
 
     img.src = imageSrc;
-  }, [imageSrc, renderWithImage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageSrc]);
 
   // Re-render when settings change (without loading indicator)
+  // Note: We use a ref check instead of isReady state to avoid infinite loops
   useEffect(() => {
-    if (loadedImageRef.current && isReady) {
+    if (loadedImageRef.current && previousImageSrcRef.current) {
       renderWithImage(loadedImageRef.current);
     }
-  }, [location, useOriginal, vintageColor, postmark, renderWithImage, isReady]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location, useOriginal, vintageColor, postmark, textureLoaded]);
 
   return (
-    <div className="relative w-full max-w-md mx-auto">
+    <div className="relative w-full max-w-md mx-auto" suppressHydrationWarning>
       <canvas
         ref={canvasRef}
         className={`w-full h-auto transition-opacity duration-500 ${
           isReady ? "opacity-100" : "opacity-0"
         }`}
+        suppressHydrationWarning
       />
       {!isReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded-lg aspect-square">

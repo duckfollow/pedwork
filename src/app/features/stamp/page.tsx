@@ -428,6 +428,233 @@ export default function StampCameraPage() {
         
         ctx.drawImage(bgImg, bgDrawX, bgDrawY, bgDrawWidth, bgDrawHeight);
 
+        // ===== HAND-DRAWN DOODLE YEAR OVERLAY =====
+        // Render current year with playful sketchy hand-drawn style
+        ctx.save();
+        
+        const currentYear = new Date().getFullYear().toString();
+        
+        // Create a temporary canvas for the doodle year
+        const yearCanvas = document.createElement("canvas");
+        yearCanvas.width = storyWidth;
+        yearCanvas.height = storyHeight;
+        const yearCtx = yearCanvas.getContext("2d");
+        
+        if (yearCtx) {
+          // Draw the crumpled paper texture as base for blending
+          yearCtx.drawImage(bgImg, bgDrawX, bgDrawY, bgDrawWidth, bgDrawHeight);
+          
+          yearCtx.globalCompositeOperation = "multiply";
+          
+          // Position: slightly offset for editorial feel
+          const baseX = storyWidth / 2 - 320;
+          const baseY = storyHeight / 2 - 40;
+          const digitSpacing = 165;
+          
+          // Ink color - muted brown/gray for nostalgic feel
+          const inkColor = "rgba(55, 45, 40, 1)";
+          
+          // Helper function to draw a sketchy line with varying thickness
+          const drawSketchyLine = (
+            x1: number, y1: number, 
+            x2: number, y2: number, 
+            baseWidth: number,
+            passes: number = 3
+          ) => {
+            for (let pass = 0; pass < passes; pass++) {
+              yearCtx.beginPath();
+              yearCtx.strokeStyle = inkColor;
+              // Vary thickness for hand-drawn feel
+              yearCtx.lineWidth = baseWidth * (0.6 + Math.random() * 0.8);
+              yearCtx.lineCap = "round";
+              yearCtx.lineJoin = "round";
+              
+              // Add slight jitter to start/end points
+              const jitter = 3;
+              const sx = x1 + (Math.random() - 0.5) * jitter;
+              const sy = y1 + (Math.random() - 0.5) * jitter;
+              const ex = x2 + (Math.random() - 0.5) * jitter;
+              const ey = y2 + (Math.random() - 0.5) * jitter;
+              
+              // Draw with slight curve for organic feel
+              const midX = (sx + ex) / 2 + (Math.random() - 0.5) * 8;
+              const midY = (sy + ey) / 2 + (Math.random() - 0.5) * 8;
+              
+              yearCtx.moveTo(sx, sy);
+              yearCtx.quadraticCurveTo(midX, midY, ex, ey);
+              yearCtx.globalAlpha = 0.15 + Math.random() * 0.2;
+              yearCtx.stroke();
+            }
+          };
+          
+          // Helper function to draw a sketchy curve
+          const drawSketchyCurve = (
+            cx: number, cy: number,
+            radius: number,
+            startAngle: number,
+            endAngle: number,
+            baseWidth: number
+          ) => {
+            const steps = 12;
+            const angleStep = (endAngle - startAngle) / steps;
+            
+            for (let pass = 0; pass < 3; pass++) {
+              yearCtx.beginPath();
+              yearCtx.strokeStyle = inkColor;
+              yearCtx.lineWidth = baseWidth * (0.5 + Math.random() * 0.7);
+              yearCtx.lineCap = "round";
+              yearCtx.globalAlpha = 0.12 + Math.random() * 0.18;
+              
+              const radiusJitter = radius + (Math.random() - 0.5) * 6;
+              
+              for (let i = 0; i <= steps; i++) {
+                const angle = startAngle + i * angleStep;
+                const r = radiusJitter + (Math.random() - 0.5) * 8;
+                const x = cx + Math.cos(angle) * r + (Math.random() - 0.5) * 4;
+                const y = cy + Math.sin(angle) * r + (Math.random() - 0.5) * 4;
+                
+                if (i === 0) {
+                  yearCtx.moveTo(x, y);
+                } else {
+                  yearCtx.lineTo(x, y);
+                }
+              }
+              yearCtx.stroke();
+            }
+          };
+          
+          // Draw each digit with doodle style
+          const drawDoodleDigit = (digit: string, x: number, y: number, size: number) => {
+            const w = size * 0.6;  // width
+            const h = size;       // height
+            const sw = size * 0.08; // stroke width base
+            
+            // Add slight rotation for playful feel
+            yearCtx.save();
+            yearCtx.translate(x + w/2, y + h/2);
+            yearCtx.rotate((Math.random() - 0.5) * 0.08);
+            yearCtx.translate(-(x + w/2), -(y + h/2));
+            
+            switch (digit) {
+              case '0':
+                // Oval shape with imperfect curves
+                drawSketchyCurve(x + w/2, y + h/2, Math.min(w, h) * 0.45, 0, Math.PI * 2, sw);
+                drawSketchyCurve(x + w/2, y + h/2, Math.min(w, h) * 0.42, 0.2, Math.PI * 2.2, sw * 0.7);
+                break;
+                
+              case '1':
+                // Vertical line with small serif/flag
+                drawSketchyLine(x + w * 0.3, y + h * 0.15, x + w * 0.55, y + h * 0.05, sw);
+                drawSketchyLine(x + w * 0.5, y + h * 0.05, x + w * 0.5, y + h * 0.95, sw * 1.2);
+                drawSketchyLine(x + w * 0.25, y + h * 0.95, x + w * 0.75, y + h * 0.95, sw);
+                break;
+                
+              case '2':
+                // Curved top, diagonal, base
+                drawSketchyCurve(x + w * 0.5, y + h * 0.25, w * 0.4, -Math.PI * 0.8, Math.PI * 0.3, sw);
+                drawSketchyLine(x + w * 0.8, y + h * 0.35, x + w * 0.15, y + h * 0.92, sw);
+                drawSketchyLine(x + w * 0.1, y + h * 0.95, x + w * 0.9, y + h * 0.95, sw * 1.1);
+                break;
+                
+              case '3':
+                // Two curves
+                drawSketchyCurve(x + w * 0.45, y + h * 0.25, w * 0.38, -Math.PI * 0.7, Math.PI * 0.4, sw);
+                drawSketchyCurve(x + w * 0.45, y + h * 0.72, w * 0.42, -Math.PI * 0.4, Math.PI * 0.7, sw);
+                break;
+                
+              case '4':
+                // Angled lines
+                drawSketchyLine(x + w * 0.65, y + h * 0.05, x + w * 0.1, y + h * 0.6, sw);
+                drawSketchyLine(x + w * 0.08, y + h * 0.62, x + w * 0.92, y + h * 0.62, sw);
+                drawSketchyLine(x + w * 0.65, y + h * 0.05, x + w * 0.65, y + h * 0.95, sw * 1.1);
+                break;
+                
+              case '5':
+                // Top, curve down
+                drawSketchyLine(x + w * 0.8, y + h * 0.08, x + w * 0.2, y + h * 0.08, sw);
+                drawSketchyLine(x + w * 0.2, y + h * 0.08, x + w * 0.18, y + h * 0.42, sw);
+                drawSketchyCurve(x + w * 0.5, y + h * 0.65, w * 0.42, -Math.PI * 0.5, Math.PI * 0.75, sw);
+                break;
+                
+              case '6':
+                // Curved with loop
+                drawSketchyCurve(x + w * 0.5, y + h * 0.35, w * 0.35, -Math.PI * 0.2, Math.PI * 1.2, sw);
+                drawSketchyCurve(x + w * 0.5, y + h * 0.68, w * 0.38, 0, Math.PI * 2, sw);
+                break;
+                
+              case '7':
+                // Top bar and diagonal
+                drawSketchyLine(x + w * 0.1, y + h * 0.08, x + w * 0.9, y + h * 0.08, sw * 1.1);
+                drawSketchyLine(x + w * 0.85, y + h * 0.08, x + w * 0.35, y + h * 0.95, sw);
+                // Optional cross stroke
+                drawSketchyLine(x + w * 0.35, y + h * 0.5, x + w * 0.7, y + h * 0.48, sw * 0.6);
+                break;
+                
+              case '8':
+                // Two loops
+                drawSketchyCurve(x + w * 0.5, y + h * 0.28, w * 0.35, 0, Math.PI * 2, sw);
+                drawSketchyCurve(x + w * 0.5, y + h * 0.7, w * 0.4, 0, Math.PI * 2, sw);
+                break;
+                
+              case '9':
+                // Loop and tail
+                drawSketchyCurve(x + w * 0.5, y + h * 0.32, w * 0.38, 0, Math.PI * 2, sw);
+                drawSketchyCurve(x + w * 0.5, y + h * 0.65, w * 0.35, -Math.PI * 0.2, Math.PI * 1.2, sw);
+                break;
+            }
+            
+            yearCtx.restore();
+          };
+          
+          // Draw each digit of the year
+          currentYear.split('').forEach((digit, index) => {
+            const digitX = baseX + index * digitSpacing + (Math.random() - 0.5) * 10;
+            const digitY = baseY + (Math.random() - 0.5) * 15;
+            drawDoodleDigit(digit, digitX, digitY, 280);
+          });
+          
+          // Add ink bleed/splatter effects
+          yearCtx.globalCompositeOperation = "multiply";
+          yearCtx.globalAlpha = 0.06;
+          yearCtx.fillStyle = inkColor;
+          
+          for (let i = 0; i < 60; i++) {
+            const x = baseX + Math.random() * (digitSpacing * 4 + 100) - 50;
+            const y = baseY + Math.random() * 320 - 20;
+            const size = Math.random() * 4 + 1;
+            yearCtx.beginPath();
+            yearCtx.arc(x, y, size, 0, Math.PI * 2);
+            yearCtx.fill();
+          }
+          
+          // Add subtle ink texture variation
+          yearCtx.globalCompositeOperation = "destination-out";
+          yearCtx.globalAlpha = 0.1;
+          for (let i = 0; i < 100; i++) {
+            const x = baseX + Math.random() * (digitSpacing * 4);
+            const y = baseY + Math.random() * 280;
+            yearCtx.beginPath();
+            yearCtx.arc(x, y, Math.random() * 3 + 0.5, 0, Math.PI * 2);
+            yearCtx.fill();
+          }
+          
+          yearCtx.globalCompositeOperation = "source-over";
+          yearCtx.globalAlpha = 1;
+        }
+        
+        // Composite doodle year onto main canvas with multiply blend
+        ctx.globalCompositeOperation = "multiply";
+        ctx.globalAlpha = 0.22; // Low opacity for subtle nostalgic effect
+        ctx.filter = "blur(0.5px)"; // Slight blur for ink bleed
+        ctx.drawImage(yearCanvas, 0, 0);
+        ctx.filter = "none";
+        
+        // Reset composite mode
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 1;
+        
+        ctx.restore();
+
         // Calculate stamp size - make it prominent but leave breathing room
         // Stamp should be about 85% of width, centered
         const stampMaxWidth = storyWidth * 0.85;
@@ -618,7 +845,7 @@ export default function StampCameraPage() {
           </p>
           
           {/* Location Status */}
-          <div className="mt-4 flex items-center justify-center gap-2 text-sm">
+          <div className="mt-4 flex items-center justify-center gap-2 text-sm" suppressHydrationWarning>
             {isLoadingLocation ? (
               <span className="inline-flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
                 <Loader2 className="w-4 h-4 animate-spin" />
