@@ -39,7 +39,7 @@ export default function StampCameraPage() {
   const [stampedImage, setStampedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sourceType, setSourceType] = useState<"camera" | "upload">("camera");
-  const [useOriginal, setUseOriginal] = useState(false);
+  const [useOriginal, setUseOriginal] = useState(true);
   const [vintageColor, setVintageColor] = useState<"blue" | "sepia" | "green" | "red" | "purple">("blue");
   const [postmarkEnabled, setPostmarkEnabled] = useState(false);
   const [postmarkPosition, setPostmarkPosition] = useState<"bottom-right" | "bottom-left" | "top-right">("bottom-right");
@@ -1259,7 +1259,7 @@ export default function StampCameraPage() {
           {appState === "stamped" && croppedImage && (
             <div className="animate-fade-in-up">
               {/* Style Toggle */}
-              <div className="flex flex-col items-center gap-3 mb-4">
+              <div className="flex flex-col items-center gap-3 mb-4 bg-white/80 dark:bg-zinc-800/80 backdrop-blur-xl rounded-2xl p-4 border border-amber-100 dark:border-zinc-700">
                 {/* Mode Toggle */}
                 <div className="flex items-center gap-2">
                   <button
