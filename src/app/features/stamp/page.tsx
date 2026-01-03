@@ -1,11 +1,27 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Download, RefreshCcw, Camera, AlertCircle, Stamp, MapPin, Loader2, Upload, ImageIcon, Palette, Circle, Share2 } from "lucide-react";
+import { Download, RefreshCcw, Camera, AlertCircle, Stamp, MapPin, Loader2, Upload, ImageIcon, Palette, Circle, Share2, X } from "lucide-react";
 import CameraPreview from "@/components/CameraPreview";
 import ImageCropper from "@/components/ImageCropper";
 import StampFrame from "@/components/StampFrame";
 import { trackEvent } from "@/lib/gtag";
+
+// PWA Install Prompt Event type
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
+declare global {
+  interface WindowEventMap {
+    beforeinstallprompt: BeforeInstallPromptEvent;
+  }
+}
 
 type AppState = "idle" | "camera" | "preview" | "stamped";
 
@@ -34,6 +50,14 @@ export default function StampCameraPage() {
   const [canShare, setCanShare] = useState(false);
   const [isGeneratingStory, setIsGeneratingStory] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+
+  // PWA state
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isPWA, setIsPWA] = useState(false);
   
   // Location state
   const [location, setLocation] = useState<LocationData | null>(null);
@@ -41,7 +65,7 @@ export default function StampCameraPage() {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  // Check Web Share API support on mount
+  // Check Web Share API support and detect mobile on mount
   useEffect(() => {
     // Check if Web Share API with files is supported
     const checkShareSupport = async () => {
@@ -61,7 +85,123 @@ export default function StampCameraPage() {
       }
     };
     checkShareSupport();
+
+    // Detect mobile/iOS device
+    const checkMobile = () => {
+      if (typeof window !== "undefined") {
+        const userAgent = navigator.userAgent || "";
+        const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+        const isIOSDevice = /iphone|ipad|ipod/i.test(userAgent.toLowerCase());
+        // Also check for touch capability as a fallback
+        const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        setIsMobile(isMobileDevice || (hasTouchScreen && window.innerWidth < 768) || isIOSDevice);
+      }
+    };
+    checkMobile();
+
+    // Check if running as installed PWA
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isIOSStandalone = ('standalone' in window.navigator) && (window.navigator as Navigator & { standalone?: boolean }).standalone;
+      setIsPWA(isStandalone || !!isIOSStandalone);
+    };
+    checkPWA();
   }, []);
+
+  // PWA Install Prompt handling
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      setDeferredPrompt(e);
+      // Show install prompt after user has interacted with the app
+      setTimeout(() => {
+        setShowInstallPrompt(true);
+      }, 10000); // Show after 10 seconds
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Handle app installed event
+    const handleAppInstalled = () => {
+      setShowInstallPrompt(false);
+      setDeferredPrompt(null);
+      setIsPWA(true);
+      trackEvent("pwa_installed", "install", "photo_stamp");
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  // Handle shared images from other apps (PWA Share Target)
+  useEffect(() => {
+    // Check for shared image in sessionStorage (set by service worker)
+    const sharedImage = sessionStorage.getItem('sharedImage');
+    if (sharedImage) {
+      setCapturedImage(sharedImage);
+      setSourceType('upload');
+      setAppState('preview');
+      sessionStorage.removeItem('sharedImage');
+      trackEvent("pwa_share_received", "share_target", "photo_stamp");
+    }
+
+    // Listen for shared images from service worker
+    const handleSharedImage = (event: CustomEvent<string>) => {
+      setCapturedImage(event.detail);
+      setSourceType('upload');
+      setAppState('preview');
+      trackEvent("pwa_share_received", "share_target", "photo_stamp");
+    };
+
+    window.addEventListener('sharedImage', handleSharedImage as EventListener);
+
+    // Handle URL action parameters (for shortcuts)
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    if (action === 'camera') {
+      setSourceType('camera');
+      setAppState('camera');
+    } else if (action === 'upload') {
+      fileInputRef.current?.click();
+    }
+
+    return () => {
+      window.removeEventListener('sharedImage', handleSharedImage as EventListener);
+    };
+  }, []);
+
+  // Handle PWA install
+  const handleInstallPWA = async () => {
+    if (!deferredPrompt) return;
+
+    // Show the install prompt
+    await deferredPrompt.prompt();
+
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      trackEvent("pwa_install_accepted", "install", "photo_stamp");
+    } else {
+      trackEvent("pwa_install_dismissed", "install", "photo_stamp");
+    }
+
+    // Clear the prompt
+    setDeferredPrompt(null);
+    setShowInstallPrompt(false);
+  };
+
+  const dismissInstallPrompt = () => {
+    setShowInstallPrompt(false);
+    // Don't show again for this session
+    sessionStorage.setItem('pwaPromptDismissed', 'true');
+  };
 
   // Ref to track if location request is in progress (avoids stale closure issues)
   const isRequestingLocationRef = useRef(false);
@@ -363,14 +503,63 @@ export default function StampCameraPage() {
     setAppState("idle");
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!stampedImage) return;
 
-    const link = document.createElement("a");
-    link.download = `photo-stamp-${Date.now()}.png`;
-    link.href = stampedImage;
-    link.click();
-    trackEvent("stamp_download", "square", "photo_stamp");
+    setIsDownloading(true);
+
+    try {
+      // Convert base64 to blob for sharing/saving
+      const response = await fetch(stampedImage);
+      const blob = await response.blob();
+      const file = new File([blob], `photo-stamp-${Date.now()}.png`, { type: "image/png" });
+
+      // On mobile with Web Share API support, use share to save to photos
+      if (isMobile && canShare) {
+        try {
+          await navigator.share({
+            title: "Photo Stamp",
+            text: locationText ? `My Photo Stamp from ${locationText}` : "My Photo Stamp",
+            files: [file],
+          });
+          trackEvent("stamp_download", "mobile_share", "photo_stamp");
+          setIsDownloading(false);
+          return;
+        } catch (err) {
+          // User cancelled share or it failed - try fallback
+          if (err instanceof Error && err.name === "AbortError") {
+            setIsDownloading(false);
+            return;
+          }
+        }
+      }
+
+      // On iOS without share support, show save modal with image
+      if (isMobile) {
+        // iOS Safari: Show modal with image for long-press saving
+        setShowSaveModal(true);
+        trackEvent("stamp_download", "mobile_modal", "photo_stamp");
+        setIsDownloading(false);
+        return;
+      }
+
+      // Desktop: Use traditional download link
+      const link = document.createElement("a");
+      link.download = `photo-stamp-${Date.now()}.png`;
+      link.href = stampedImage;
+      link.click();
+      trackEvent("stamp_download", "desktop", "photo_stamp");
+    } catch (err) {
+      console.error("Download error:", err);
+      // Fallback to basic download
+      const link = document.createElement("a");
+      link.download = `photo-stamp-${Date.now()}.png`;
+      link.href = stampedImage;
+      link.click();
+      trackEvent("stamp_download", "fallback", "photo_stamp");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   // Generate IG Story version (9:16 aspect ratio)
@@ -1197,11 +1386,20 @@ export default function StampCameraPage() {
                   </button>
                   <button
                     onClick={handleDownload}
-                    disabled={!stampedImage}
+                    disabled={!stampedImage || isDownloading}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-zinc-400 disabled:to-zinc-500 text-white font-medium rounded-xl shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 disabled:shadow-none transition-all active:scale-95 w-full sm:w-auto justify-center"
                   >
-                    <Download className="w-4 h-4" />
-                    Download
+                    {isDownloading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        {isMobile ? "Save to Photos" : "Download"}
+                      </>
+                    )}
                   </button>
                 </div>
 
@@ -1279,6 +1477,164 @@ export default function StampCameraPage() {
           </p>
         </footer>
       </div>
+
+      {/* Mobile Save Modal - for iOS/mobile photo gallery saving */}
+      {showSaveModal && stampedImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setShowSaveModal(false)}
+        >
+          <div 
+            className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 relative animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowSaveModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 mb-2">
+                Save to Photos
+              </h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Press and hold the image below, then tap <strong>&quot;Add to Photos&quot;</strong> or <strong>&quot;Save Image&quot;</strong>
+              </p>
+            </div>
+
+            {/* Image to save */}
+            <div className="relative rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={stampedImage}
+                alt="Photo Stamp - Press and hold to save"
+                className="w-full h-auto"
+                style={{ touchAction: "none" }}
+              />
+            </div>
+
+            {/* Instructions */}
+            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-amber-100 dark:bg-amber-800/40 rounded-full flex items-center justify-center">
+                  <span className="text-amber-600 dark:text-amber-400 text-lg">👆</span>
+                </div>
+                <div className="text-sm text-amber-800 dark:text-amber-200">
+                  <p className="font-medium mb-1">How to save:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-amber-700 dark:text-amber-300">
+                    <li>Press and hold the image above</li>
+                    <li>Tap &quot;Add to Photos&quot; or &quot;Save Image&quot;</li>
+                    <li>Find it in your photo gallery!</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            {/* Alternative: Try share again */}
+            {canShare && (
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(stampedImage);
+                    const blob = await response.blob();
+                    const file = new File([blob], `photo-stamp-${Date.now()}.png`, { type: "image/png" });
+                    await navigator.share({
+                      title: "Photo Stamp",
+                      files: [file],
+                    });
+                    setShowSaveModal(false);
+                  } catch {
+                    // Ignore if cancelled
+                  }
+                }}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all"
+              >
+                <Share2 className="w-5 h-5" />
+                Share to Save
+              </button>
+            )}
+
+            {/* Done button */}
+            <button
+              onClick={() => setShowSaveModal(false)}
+              className="w-full mt-3 py-3 text-zinc-600 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* PWA Install Prompt Banner */}
+      {showInstallPrompt && !isPWA && deferredPrompt && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-slide-in-bottom">
+          <div className="max-w-md mx-auto bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl border border-amber-200 dark:border-zinc-700 p-4">
+            <div className="flex items-start gap-4">
+              {/* App Icon */}
+              <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Stamp className="w-8 h-8 text-white" />
+              </div>
+              
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-zinc-800 dark:text-zinc-100 text-sm">
+                  Install Photo Stamp
+                </h3>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
+                  Add to home screen for quick access & offline use
+                </p>
+                
+                {/* Buttons */}
+                <div className="flex items-center gap-2 mt-3">
+                  <button
+                    onClick={handleInstallPWA}
+                    className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all active:scale-95"
+                  >
+                    Install
+                  </button>
+                  <button
+                    onClick={dismissInstallPrompt}
+                    className="px-4 py-2 text-zinc-500 dark:text-zinc-400 text-sm font-medium hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+                  >
+                    Not now
+                  </button>
+                </div>
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={dismissInstallPrompt}
+                className="flex-shrink-0 p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                aria-label="Dismiss"
+              >
+                <X className="w-5 h-5 text-zinc-400" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* iOS Install Instructions (for Safari) */}
+      {isMobile && !isPWA && !showInstallPrompt && !deferredPrompt && appState === "idle" && (
+        <div className="fixed bottom-4 left-4 right-4 z-40">
+          <button
+            onClick={() => {
+              const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
+              if (isIOS) {
+                alert('To install Photo Stamp:\n\n1. Tap the Share button (square with arrow)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm');
+              }
+            }}
+            className="w-full max-w-md mx-auto block text-center text-xs text-zinc-500 dark:text-zinc-400 py-2 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors"
+          >
+            💡 Add to Home Screen for the best experience
+          </button>
+        </div>
+      )}
     </main>
   );
 }

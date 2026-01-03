@@ -1,0 +1,70 @@
+{
+  "name": "Photo Stamp - Create Vintage Stamps",
+  "short_name": "Photo Stamp",
+  "description": "Transform your photos into beautiful vintage-style postage stamps. Add location, customize colors, and share to social media.",
+  "start_url": "/features/stamp",
+  "scope": "/features/stamp",
+  "display": "standalone",
+  "background_color": "#fffbeb",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait",
+  "categories": ["photo", "entertainment", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/stamp-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/stamp-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/icons/screenshot-narrow.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Take Photo",
+      "short_name": "Camera",
+      "description": "Open camera to take a photo",
+      "url": "/features/stamp?action=camera",
+      "icons": [{ "src": "/icons/camera-shortcut.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Upload Photo",
+      "short_name": "Upload",
+      "description": "Upload a photo from gallery",
+      "url": "/features/stamp?action=upload",
+      "icons": [{ "src": "/icons/upload-shortcut.png", "sizes": "96x96" }]
+    }
+  ],
+  "share_target": {
+    "action": "/features/stamp",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "image",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  }
+}
+

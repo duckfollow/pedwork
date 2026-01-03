@@ -1,0 +1,94 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#ea580c"/>
+    </linearGradient>
+    <linearGradient id="stampGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fef3c7"/>
+      <stop offset="100%" style="stop-color:#fde68a"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded square background -->
+  <rect width="512" height="512" rx="108" fill="url(#bgGrad)"/>
+  
+  <!-- Stamp perforations (decorative circles around edge of stamp) -->
+  <g fill="#fff" opacity="0.3">
+    <!-- Top edge -->
+    <circle cx="140" cy="90" r="8"/>
+    <circle cx="175" cy="90" r="8"/>
+    <circle cx="210" cy="90" r="8"/>
+    <circle cx="245" cy="90" r="8"/>
+    <circle cx="280" cy="90" r="8"/>
+    <circle cx="315" cy="90" r="8"/>
+    <circle cx="350" cy="90" r="8"/>
+    
+    <!-- Bottom edge -->
+    <circle cx="140" cy="422" r="8"/>
+    <circle cx="175" cy="422" r="8"/>
+    <circle cx="210" cy="422" r="8"/>
+    <circle cx="245" cy="422" r="8"/>
+    <circle cx="280" cy="422" r="8"/>
+    <circle cx="315" cy="422" r="8"/>
+    <circle cx="350" cy="422" r="8"/>
+    
+    <!-- Left edge -->
+    <circle cx="90" cy="140" r="8"/>
+    <circle cx="90" cy="175" r="8"/>
+    <circle cx="90" cy="210" r="8"/>
+    <circle cx="90" cy="245" r="8"/>
+    <circle cx="90" cy="280" r="8"/>
+    <circle cx="90" cy="315" r="8"/>
+    <circle cx="90" cy="350" r="8"/>
+    
+    <!-- Right edge -->
+    <circle cx="422" cy="140" r="8"/>
+    <circle cx="422" cy="175" r="8"/>
+    <circle cx="422" cy="210" r="8"/>
+    <circle cx="422" cy="245" r="8"/>
+    <circle cx="422" cy="280" r="8"/>
+    <circle cx="422" cy="315" r="8"/>
+    <circle cx="422" cy="350" r="8"/>
+  </g>
+  
+  <!-- Main stamp body -->
+  <rect x="110" y="110" width="292" height="292" rx="12" fill="url(#stampGrad)"/>
+  
+  <!-- Inner border -->
+  <rect x="125" y="125" width="262" height="262" rx="6" fill="none" stroke="#d97706" stroke-width="2"/>
+  
+  <!-- Photo placeholder area -->
+  <rect x="145" y="160" width="222" height="180" rx="4" fill="#78350f" opacity="0.15"/>
+  
+  <!-- Camera/image icon in center -->
+  <g transform="translate(256, 250)">
+    <!-- Camera body -->
+    <rect x="-55" y="-35" width="110" height="75" rx="12" fill="#d97706"/>
+    <!-- Camera lens -->
+    <circle cx="0" cy="5" r="28" fill="#fef3c7"/>
+    <circle cx="0" cy="5" r="20" fill="#92400e"/>
+    <circle cx="0" cy="5" r="12" fill="#fef3c7" opacity="0.5"/>
+    <!-- Flash -->
+    <rect x="25" y="-28" width="18" height="10" rx="2" fill="#fef3c7"/>
+  </g>
+  
+  <!-- Decorative stamp text at bottom -->
+  <text x="256" y="375" text-anchor="middle" font-family="Georgia, serif" font-size="18" font-weight="bold" fill="#92400e" letter-spacing="3">
+    PHOTO STAMP
+  </text>
+  
+  <!-- Corner decorations -->
+  <g stroke="#d97706" stroke-width="2" fill="none">
+    <!-- Top left -->
+    <path d="M135 145 L135 135 L145 135"/>
+    <!-- Top right -->
+    <path d="M377 145 L377 135 L367 135"/>
+    <!-- Bottom left -->
+    <path d="M135 367 L135 377 L145 377"/>
+    <!-- Bottom right -->
+    <path d="M377 367 L377 377 L367 377"/>
+  </g>
+</svg>
+
