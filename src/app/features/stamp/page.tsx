@@ -53,6 +53,8 @@ export default function StampCameraPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showStorySaveModal, setShowStorySaveModal] = useState(false);
+  const [storyImageUrl, setStoryImageUrl] = useState<string | null>(null);
 
   // PWA state
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
@@ -978,13 +980,48 @@ export default function StampCameraPage() {
     
     try {
       const storyBlob = await generateStoryImage();
+      const storyFile = new File([storyBlob], `photo-stamp-story-${Date.now()}.png`, {
+        type: "image/png",
+      });
+
+      // On mobile with Web Share API support, use share to save to photos
+      if (isMobile && canShare) {
+        try {
+          await navigator.share({
+            title: "Photo Stamp Story",
+            text: locationText ? `My Photo Stamp Story from ${locationText}` : "My Photo Stamp Story",
+            files: [storyFile],
+          });
+          trackEvent("stamp_download", "story_mobile_share", "photo_stamp");
+          setIsGeneratingStory(false);
+          return;
+        } catch (err) {
+          // User cancelled share or it failed - try fallback
+          if (err instanceof Error && err.name === "AbortError") {
+            setIsGeneratingStory(false);
+            return;
+          }
+        }
+      }
+
+      // On mobile without share support, show save modal with story image
+      if (isMobile) {
+        const url = URL.createObjectURL(storyBlob);
+        setStoryImageUrl(url);
+        setShowStorySaveModal(true);
+        trackEvent("stamp_download", "story_mobile_modal", "photo_stamp");
+        setIsGeneratingStory(false);
+        return;
+      }
+
+      // Desktop: Use traditional download link
       const url = URL.createObjectURL(storyBlob);
       const link = document.createElement("a");
       link.download = `photo-stamp-story-${Date.now()}.png`;
       link.href = url;
       link.click();
       URL.revokeObjectURL(url);
-      trackEvent("stamp_download", "story", "photo_stamp");
+      trackEvent("stamp_download", "story_desktop", "photo_stamp");
     } catch (err) {
       if (err instanceof Error) {
         setShareError(err.message);
@@ -1562,6 +1599,112 @@ export default function StampCameraPage() {
             {/* Done button */}
             <button
               onClick={() => setShowSaveModal(false)}
+              className="w-full mt-3 py-3 text-zinc-600 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Story Save Modal - for iOS/mobile photo gallery saving */}
+      {showStorySaveModal && storyImageUrl && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => {
+            setShowStorySaveModal(false);
+            URL.revokeObjectURL(storyImageUrl);
+            setStoryImageUrl(null);
+          }}
+        >
+          <div 
+            className="bg-white dark:bg-zinc-900 rounded-2xl max-w-md w-full p-6 relative animate-fade-in-up max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowStorySaveModal(false);
+                URL.revokeObjectURL(storyImageUrl);
+                setStoryImageUrl(null);
+              }}
+              className="absolute top-4 right-4 p-2 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors z-10"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 mb-2">
+                Save Story to Photos
+              </h3>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                Press and hold the image below, then tap <strong>&quot;Add to Photos&quot;</strong> or <strong>&quot;Save Image&quot;</strong>
+              </p>
+            </div>
+
+            {/* Story Image to save */}
+            <div className="relative rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={storyImageUrl}
+                alt="Photo Stamp Story - Press and hold to save"
+                className="w-full h-auto"
+                style={{ touchAction: "none" }}
+              />
+            </div>
+
+            {/* Instructions */}
+            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 mb-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-purple-100 dark:bg-purple-800/40 rounded-full flex items-center justify-center">
+                  <span className="text-purple-600 dark:text-purple-400 text-lg">👆</span>
+                </div>
+                <div className="text-sm text-purple-800 dark:text-purple-200">
+                  <p className="font-medium mb-1">How to save:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-purple-700 dark:text-purple-300">
+                    <li>Press and hold the story image above</li>
+                    <li>Tap &quot;Add to Photos&quot; or &quot;Save Image&quot;</li>
+                    <li>Share to Instagram Story!</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            {/* Alternative: Try share again */}
+            {canShare && (
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(storyImageUrl);
+                    const blob = await response.blob();
+                    const file = new File([blob], `photo-stamp-story-${Date.now()}.png`, { type: "image/png" });
+                    await navigator.share({
+                      title: "Photo Stamp Story",
+                      files: [file],
+                    });
+                    setShowStorySaveModal(false);
+                    URL.revokeObjectURL(storyImageUrl);
+                    setStoryImageUrl(null);
+                  } catch {
+                    // Ignore if cancelled
+                  }
+                }}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white font-medium rounded-xl hover:from-purple-600 hover:via-pink-600 hover:to-orange-600 transition-all"
+              >
+                <Share2 className="w-5 h-5" />
+                Share to Save
+              </button>
+            )}
+
+            {/* Done button */}
+            <button
+              onClick={() => {
+                setShowStorySaveModal(false);
+                URL.revokeObjectURL(storyImageUrl);
+                setStoryImageUrl(null);
+              }}
               className="w-full mt-3 py-3 text-zinc-600 dark:text-zinc-400 font-medium hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
             >
               Done
