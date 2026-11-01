@@ -1,114 +1,268 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Stamp, Gamepad2 } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
-import ProfileHero from "@/components/ProfileHero";
-import SocialGrid from "@/components/SocialGrid";
-import ScrollIndicator from "@/components/ScrollIndicator";
+import {
+  ArrowDown,
+  ArrowUpRight,
+  Github,
+  Mail,
+  Gamepad2,
+  Terminal,
+  Code2,
+} from "lucide-react";
+import OpenSourceProjects from "@/components/OpenSourceProjects";
+import PortfolioThemeToggle from "@/components/PortfolioThemeToggle";
+import styles from "./portfolio.module.css";
 
-// Binary patterns (DUCK-FOLLOW encoded + variations)
-const binaryPatterns = [
-  "01000100 01010101 01000011 01001011",
-  "01000110 01001111 01001100 01001100",
-  "01001111 01010111 00101110 01000011",
-  "01001111 00100000 01010000 01000101",
-  "01000100 01010111 01001111 01010010",
-  "01001011 00100000 01000011 01001111",
-  "01000100 01000101 01010010 00100000",
-  "01010100 01000001 01001110 01001011",
+const socialLinks = [
+  {
+    label: "GitHub",
+    value: "@duckfollow",
+    href: "https://github.com/duckfollow",
+  },
+  {
+    label: "Email",
+    value: "p.supancho@gmail.com",
+    href: "mailto:p.supancho@gmail.com",
+  },
+  {
+    label: "LinkedIn",
+    value: "Prasit Suphancho",
+    href: "https://www.linkedin.com/in/prasit-suphancho-864014195/",
+  },
+  {
+    label: "Instagram",
+    value: "@tankps",
+    href: "https://www.instagram.com/tankps/",
+  },
+  {
+    label: "Facebook",
+    value: "prasit.suphancho",
+    href: "https://www.facebook.com/prasit.suphancho",
+  },
+  {
+    label: "TikTok",
+    value: "@tankps_",
+    href: "https://www.tiktok.com/@tankps_",
+  },
+  {
+    label: "Twitter / X",
+    value: "@slammonder",
+    href: "https://twitter.com/slammonder",
+  },
+  {
+    label: "Tech Calendar",
+    value: "Events & community",
+    href: "https://th.techcal.dev/",
+  },
 ];
-
-// Generate watermark rows with binary code
-const BinaryWatermark = () => {
-  const rows = Array.from({ length: 40 }, (_, i) => i);
-  const cols = Array.from({ length: 6 }, (_, i) => i);
-
-  return (
-    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none select-none">
-      <div className="absolute inset-0 flex flex-col justify-between">
-        {rows.map((row) => (
-          <div
-            key={row}
-            className={`flex whitespace-nowrap ${
-              row % 2 === 0 ? "justify-start" : "justify-end"
-            }`}
-          >
-            <div
-              className={`flex gap-8 md:gap-12 ${
-                row % 2 === 0 ? "animate-marquee-left" : "animate-marquee-right"
-              }`}
-            >
-              {cols.map((col) => (
-                <span
-                  key={col}
-                  className="text-xl md:text-3xl lg:text-4xl font-mono font-bold tracking-wider text-white/[0.025] dark:text-white/[0.045]"
-                >
-                  {binaryPatterns[(row + col) % binaryPatterns.length]}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 export default function Home() {
   return (
-    <main className="relative min-h-screen bg-gradient-to-br from-yellow-300 via-orange-400 to-orange-500 dark:from-amber-500 dark:via-orange-600 dark:to-orange-700 transition-colors duration-500 overflow-hidden">
-      {/* Binary watermark background */}
-      <BinaryWatermark />
-
-      {/* Main content */}
-      <div className="relative z-10">
-        <ThemeToggle />
-        <ProfileHero />
-        
-        {/* Features Section */}
-        <section className="py-12 px-6">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-center text-2xl md:text-3xl font-bold text-white/90 dark:text-white mb-8 animate-fade-in">
-              Activity
-            </h2>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link
-                href="/features/stamp"
-                className="group flex items-center gap-4 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-fade-in-up w-full sm:w-72"
+    <main className={styles.site} id="top">
+      <header className={styles.header}>
+        <a href="#top" className={styles.wordmark}>
+          <span aria-hidden="true">&gt;_</span> pedwork
+          <span className={styles.wordmarkDot}>.</span>
+        </a>
+        <nav aria-label="Main navigation">
+          <a href="#open-source">Projects</a>
+          <a href="#playground">Playground</a>
+          <a href="#contact">Contact</a>
+        </nav>
+        <PortfolioThemeToggle />
+      </header>
+      <div className={styles.container}>
+        <section className={styles.hero} aria-labelledby="hero-title">
+          <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}>
+              <span className={styles.statusDot} /> PRASIT SUPHANCHO / @TANKPS
+            </p>
+            <h1 id="hero-title">
+              Less friction.
+              <br />
+              More <em>building.</em>
+            </h1>
+            <p className={styles.heroDescription}>
+              I’m Prasit, a software developer who likes making things work —
+              and making the tools that help along the way.
+            </p>
+            <div className={styles.heroActions}>
+              <a href="#open-source" className={styles.primaryButton}>
+                Explore my projects <ArrowDown size={16} aria-hidden="true" />
+              </a>
+              <a
+                href="https://github.com/duckfollow"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.textButton}
               >
-                <div className="p-3 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-shadow">
-                  <Stamp className="w-8 h-8 text-white" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
-                    Photo Stamp
-                  </h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                    Create vintage postage stamps from your photos
-                  </p>
-                </div>
-              </Link>
-              <Link
-                href="/nad"
-                className="group flex items-center gap-4 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 animate-fade-in-up w-full sm:w-72"
-              >
-                <div className="p-3 bg-gradient-to-br from-zinc-700 to-zinc-900 rounded-xl shadow-lg shadow-zinc-700/30 group-hover:shadow-amber-500/50 transition-shadow">
-                  <Gamepad2 className="w-8 h-8 text-amber-400" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">
-                    Night At Detective
-                  </h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                    Mystery game in development
-                  </p>
-                </div>
-              </Link>
+                <Github size={17} aria-hidden="true" /> GitHub{" "}
+                <ArrowUpRight size={14} aria-hidden="true" />
+              </a>
+            </div>
+            <div className={styles.heroSignature}>
+              <Image
+                src="/images/avatar.png"
+                alt="Prasit Suphancho"
+                width={38}
+                height={38}
+                priority
+              />
+              <div>
+                <strong>Prasit Suphancho</strong>
+                <span>aka tankps / duckfollow</span>
+              </div>
+            </div>
+          </div>
+          <div className={styles.editor} aria-label="Developer profile">
+            <div className={styles.editorBar}>
+              <div className={styles.windowDots} aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </div>
+              <span>developer.ts</span>
+              <Code2 size={14} aria-hidden="true" />
+            </div>
+            <div className={styles.editorCode}>
+              <div className={styles.codeComment}>{"// a little about me"}</div>
+              <div>
+                <span className={styles.codePurple}>const</span> developer ={" "}
+                {"{"}
+              </div>
+              <div className={styles.codeIndent}>
+                name:{" "}
+                <span className={styles.codeString}>
+                  &quot;Prasit Suphancho&quot;
+                </span>
+                ,
+              </div>
+              <div className={styles.codeIndent}>
+                handle:{" "}
+                <span className={styles.codeString}>&quot;@tankps&quot;</span>,
+              </div>
+              <div className={styles.codeIndent}>
+                github:{" "}
+                <span className={styles.codeString}>
+                  &quot;duckfollow&quot;
+                </span>
+                ,
+              </div>
+              <div className={styles.codeIndent}>
+                focus:{" "}
+                <span className={styles.codeString}>
+                  &quot;developer tools&quot;
+                </span>
+                ,
+              </div>
+              <div className={styles.codeIndent}>
+                openSource: <span className={styles.codeOrange}>true</span>,
+              </div>
+              <div className={styles.codeIndent}>projects: [</div>
+              <div className={styles.codeIndentDouble}>
+                <span className={styles.codeString}>&quot;EDITH&quot;</span>,{" "}
+                <span className={styles.codeString}>&quot;Ultron&quot;</span>,
+              </div>
+              <div className={styles.codeIndentDouble}>
+                <span className={styles.codeString}>&quot;Dum-E&quot;</span>,{" "}
+                <span className={styles.codeString}>&quot;u&quot;</span>
+              </div>
+              <div className={styles.codeIndent}>]</div>
+              <div>{"};"}</div>
+              <div className={styles.codeComment}>
+                {"// always something to build"}
+                <span className={styles.cursor} aria-hidden="true" />
+              </div>
+            </div>
+            <div className={styles.editorStatus}>
+              <span>
+                <Terminal size={12} aria-hidden="true" /> Personal workspace
+              </span>
+              <span>TypeScript</span>
             </div>
           </div>
         </section>
-
-        <SocialGrid />
-        <ScrollIndicator />
+        <div className={styles.workshopStrip}>
+          <span>THE DEVELOPER’S WORKSHOP</span>
+          <p>Inspect. Connect. Query. Automate.</p>
+          <span>
+            4 OPEN SOURCE TOOLS <ArrowDown size={13} aria-hidden="true" />
+          </span>
+        </div>
+        <OpenSourceProjects />
+        <section
+          id="playground"
+          className={styles.section}
+          aria-labelledby="playground-title"
+        >
+          <div className={styles.sectionHeading}>
+            <div>
+              <p className={styles.eyebrow}>02 / SIDE QUESTS</p>
+              <h2 id="playground-title">Room to experiment.</h2>
+            </div>
+            <p>
+              Because not everything needs
+              <br />
+              to be a developer tool.
+            </p>
+          </div>
+          <div className={styles.playgroundGrid}>
+            <Link href="/nad" className={styles.experiment}>
+              <div className={styles.experimentIcon}>
+                <Gamepad2 size={27} aria-hidden="true" />
+              </div>
+              <div>
+                <span>GAME / IN DEVELOPMENT</span>
+                <h3>Night At Detective</h3>
+                <p>A mystery game, one clue at a time.</p>
+              </div>
+              <ArrowUpRight size={20} aria-hidden="true" />
+            </Link>
+          </div>
+        </section>
+        <section
+          id="contact"
+          className={`${styles.section} ${styles.contact}`}
+          aria-labelledby="contact-title"
+        >
+          <div className={styles.sectionHeading}>
+            <div>
+              <p className={styles.eyebrow}>03 / KEEP IN TOUCH</p>
+              <h2 id="contact-title">
+                Good things start
+                <br />
+                with a <em>hello.</em>
+              </h2>
+            </div>
+            <a
+              className={styles.primaryButton}
+              href="mailto:p.supancho@gmail.com"
+            >
+              <Mail size={16} aria-hidden="true" /> Say hello{" "}
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </a>
+          </div>
+          <div className={styles.socialGrid}>
+            {socialLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target={link.href.startsWith("mailto:") ? undefined : "_blank"}
+                rel="noopener noreferrer"
+              >
+                <div>
+                  <strong>{link.label}</strong>
+                  <span>{link.value}</span>
+                </div>
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </a>
+            ))}
+          </div>
+        </section>
+        <footer className={styles.footer}>
+          <span>© {new Date().getFullYear()} Prasit Suphancho</span>
+          <span>Built with curiosity. Shared with you.</span>
+          <a href="#top">Back to top ↑</a>
+        </footer>
       </div>
     </main>
   );
