@@ -17,49 +17,55 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = new URL(
+  process.env.NEXT_PUBLIC_BASE_URL || "https://duckfollow.co",
+);
+const title = "Prasit Suphancho — Developer & Open Source Tools";
+const description =
+  "Software developer behind EDITH, Ultron, Dum-E, and u. Explore open-source tools for debugging, terminals, databases, and API workflows.";
+const socialImage = {
+  url: "/social-preview",
+  width: 1200,
+  height: 630,
+  type: "image/png",
+  alt: "Prasit Suphancho (@tankps / duckfollow) — developer of EDITH, Ultron, Dum-E, and u. Less friction. More building.",
+};
+
 export const metadata: Metadata = {
-  title: "Prasit Suphancho | @tankps - Personal Profile",
-  description:
-    "Personal profile website of Prasit Suphancho (@tankps). Software developer, creative thinker, and tech enthusiast. Connect with me on social media and explore my digital presence.",
+  metadataBase: siteUrl,
+  title,
+  description,
   keywords: [
     "Prasit Suphancho",
     "tankps",
     "duckfollow",
     "developer",
-    "portfolio",
-    "personal website",
+    "open source",
+    "developer tools",
+    "EDITH",
+    "Ultron",
+    "Dum-E",
+    "API workflows",
   ],
   authors: [{ name: "Prasit Suphancho" }],
   creator: "Prasit Suphancho",
   openGraph: {
-    title: "Prasit Suphancho | @tankps - Personal Profile",
-    description:
-      "Personal profile website of Prasit Suphancho (@tankps). Software developer, creative thinker, and tech enthusiast. Connect with me on social media and explore my digital presence.",
-    url: "https://duckfollow.co/",
-    siteName: "Pedwork",
+    title,
+    description,
+    url: siteUrl,
+    siteName: "Pedwork — Prasit Suphancho",
     type: "website",
     locale: "en_US",
-    images: [
-      {
-        url: "https://pedwork.vercel.app/images/og-thumbnail.png",
-        width: 1200,
-        height: 630,
-        alt: "Prasit Suphancho - Personal Profile",
-      },
-    ],
+    images: [socialImage],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Prasit Suphancho | @tankps - Personal Profile",
-    description:
-      "Personal profile website of Prasit Suphancho (@tankps). Software developer, creative thinker, and tech enthusiast.",
+    title,
+    description,
     creator: "@slammonder",
-    images: ["https://pedwork.vercel.app/images/og-thumbnail.png"],
+    images: [socialImage],
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
