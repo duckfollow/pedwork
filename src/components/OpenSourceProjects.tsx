@@ -10,7 +10,7 @@ export default function OpenSourceProjects() {
       aria-labelledby="projects-title"
       className={styles.section}
     >
-      <div className={styles.sectionHeading}>
+      <div className={styles.sectionHeading} data-reveal>
         <div>
           <p className={styles.eyebrow}>01 / OPEN SOURCE</p>
           <h2 id="projects-title">
@@ -29,7 +29,10 @@ export default function OpenSourceProjects() {
         {projects.map((project, index) => (
           <article
             key={project.id}
+            id={`project-${project.id}`}
+            tabIndex={-1}
             data-project={project.id}
+            data-reveal
             className={styles.project}
           >
             <div className={styles.projectTop}>

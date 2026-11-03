@@ -6,12 +6,12 @@ import {
   Github,
   Mail,
   Gamepad2,
-  Terminal,
-  Code2,
 } from "lucide-react";
+import DeveloperEditor from "@/components/DeveloperEditor";
 import OpenSourceProjects from "@/components/OpenSourceProjects";
 import PortfolioThemeToggle from "@/components/PortfolioThemeToggle";
 import styles from "./portfolio.module.css";
+import PortfolioMotion from "@/components/PortfolioMotion";
 
 const socialLinks = [
   {
@@ -58,6 +58,7 @@ const socialLinks = [
 export default function Home() {
   return (
     <main className={styles.site} id="top">
+      <PortfolioMotion />
       <header className={styles.header}>
         <a href="#top" className={styles.wordmark}>
           <span aria-hidden="true">&gt;_</span> pedwork
@@ -76,10 +77,19 @@ export default function Home() {
             <p className={styles.eyebrow}>
               <span className={styles.statusDot} /> PRASIT SUPHANCHO / @TANKPS
             </p>
-            <h1 id="hero-title">
-              Less friction.
+            <h1 id="hero-title" aria-label="Less friction. More building.">
+              <span className={styles.frictionLine} aria-hidden="true">
+                Less{" "}
+                <span className={styles.frictionWord}>
+                  {Array.from("friction.").map((letter, index) => (
+                    <span key={index}>{letter}</span>
+                  ))}
+                </span>
+              </span>
               <br />
-              More <em>building.</em>
+              <span className={styles.buildingLine} aria-hidden="true">
+                More <em>building<span className={styles.buildingDot}>.</span></em>
+              </span>
             </h1>
             <p className={styles.heroDescription}>
               I’m Prasit, a software developer who likes making things work —
@@ -113,75 +123,9 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className={styles.editor} aria-label="Developer profile">
-            <div className={styles.editorBar}>
-              <div className={styles.windowDots} aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </div>
-              <span>developer.ts</span>
-              <Code2 size={14} aria-hidden="true" />
-            </div>
-            <div className={styles.editorCode}>
-              <div className={styles.codeComment}>{"// a little about me"}</div>
-              <div>
-                <span className={styles.codePurple}>const</span> developer ={" "}
-                {"{"}
-              </div>
-              <div className={styles.codeIndent}>
-                name:{" "}
-                <span className={styles.codeString}>
-                  &quot;Prasit Suphancho&quot;
-                </span>
-                ,
-              </div>
-              <div className={styles.codeIndent}>
-                handle:{" "}
-                <span className={styles.codeString}>&quot;@tankps&quot;</span>,
-              </div>
-              <div className={styles.codeIndent}>
-                github:{" "}
-                <span className={styles.codeString}>
-                  &quot;duckfollow&quot;
-                </span>
-                ,
-              </div>
-              <div className={styles.codeIndent}>
-                focus:{" "}
-                <span className={styles.codeString}>
-                  &quot;developer tools&quot;
-                </span>
-                ,
-              </div>
-              <div className={styles.codeIndent}>
-                openSource: <span className={styles.codeOrange}>true</span>,
-              </div>
-              <div className={styles.codeIndent}>projects: [</div>
-              <div className={styles.codeIndentDouble}>
-                <span className={styles.codeString}>&quot;EDITH&quot;</span>,{" "}
-                <span className={styles.codeString}>&quot;Ultron&quot;</span>,
-              </div>
-              <div className={styles.codeIndentDouble}>
-                <span className={styles.codeString}>&quot;Dum-E&quot;</span>,{" "}
-                <span className={styles.codeString}>&quot;u&quot;</span>
-              </div>
-              <div className={styles.codeIndent}>]</div>
-              <div>{"};"}</div>
-              <div className={styles.codeComment}>
-                {"// always something to build"}
-                <span className={styles.cursor} aria-hidden="true" />
-              </div>
-            </div>
-            <div className={styles.editorStatus}>
-              <span>
-                <Terminal size={12} aria-hidden="true" /> Personal workspace
-              </span>
-              <span>TypeScript</span>
-            </div>
-          </div>
+          <DeveloperEditor />
         </section>
-        <div className={styles.workshopStrip}>
+        <div className={styles.workshopStrip} data-reveal>
           <span>THE DEVELOPER’S WORKSHOP</span>
           <p>Inspect. Connect. Query. Automate.</p>
           <span>
@@ -194,7 +138,7 @@ export default function Home() {
           className={styles.section}
           aria-labelledby="playground-title"
         >
-          <div className={styles.sectionHeading}>
+          <div className={styles.sectionHeading} data-reveal>
             <div>
               <p className={styles.eyebrow}>02 / SIDE QUESTS</p>
               <h2 id="playground-title">Room to experiment.</h2>
@@ -206,7 +150,7 @@ export default function Home() {
             </p>
           </div>
           <div className={styles.playgroundGrid}>
-            <Link href="/nad" className={styles.experiment}>
+            <Link href="/nad" className={styles.experiment} data-reveal>
               <div className={styles.experimentIcon}>
                 <Gamepad2 size={27} aria-hidden="true" />
               </div>
@@ -224,7 +168,7 @@ export default function Home() {
           className={`${styles.section} ${styles.contact}`}
           aria-labelledby="contact-title"
         >
-          <div className={styles.sectionHeading}>
+          <div className={styles.sectionHeading} data-reveal>
             <div>
               <p className={styles.eyebrow}>03 / KEEP IN TOUCH</p>
               <h2 id="contact-title">
@@ -241,7 +185,7 @@ export default function Home() {
               <ArrowUpRight size={15} aria-hidden="true" />
             </a>
           </div>
-          <div className={styles.socialGrid}>
+          <div className={styles.socialGrid} data-reveal>
             {socialLinks.map((link) => (
               <a
                 key={link.label}
