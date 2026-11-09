@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Github, Download } from "lucide-react";
 import { projects } from "@/lib/projects";
@@ -47,7 +48,7 @@ export default function OpenSourceProjects() {
                 width={60}
                 height={60}
               />
-              <h3>{project.name}</h3>
+              <h3><Link href={`/${project.id}`} className={styles.projectDetailsLink}>{project.name}</Link></h3>
             </div>
             <p>{project.description}</p>
             <ul aria-label={`${project.name} features`} className={styles.tags}>
