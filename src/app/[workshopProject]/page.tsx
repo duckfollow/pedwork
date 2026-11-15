@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Activity, ArrowLeft, ArrowUpRight, Braces, Database, Download, GitBranch, Github, ListTree, Network, PanelLeft, Send, Table2 } from "lucide-react";
+import { Activity, AudioLines, FileDiff, History, Mic, Settings2, ArrowLeft, ArrowUpRight, Braces, Database, Download, GitBranch, Github, ListTree, Network, PanelLeft, Send, Table2 } from "lucide-react";
+import ProjectIcon from "@/components/ProjectIcon";
 import { projects } from "@/lib/projects";
 import styles from "../ultron/ultron.module.css";
 import theme from "./workshop.module.css";
@@ -33,6 +34,24 @@ const details = {
       { icon: Send, title: "Build API requests", text: "Organize requests into collections and reuse variables across environments." },
       { icon: GitBranch, title: "Connect your steps", text: "Pass response data into later requests, apply transforms, and use conditions and loops." },
       { icon: Braces, title: "Document your API", text: "Generate documentation from saved requests, include response examples, and export to Markdown." },
+    ],
+  },
+  natalie: {
+    tagline: "Review changes, then commit what you mean.",
+    platform: "Apple Silicon · macOS",
+    features: [
+      { icon: FileDiff, title: "Review and stage changes", text: "Read diffs and stage whole files or individual hunks before committing." },
+      { icon: History, title: "Explore commit history", text: "Follow the branch graph or search for commits by subject, author, hash, or ref." },
+      { icon: GitBranch, title: "Manage branches", text: "Create, rename, and publish branches, or cherry-pick changes from a commit." },
+    ],
+  },
+  lyla: {
+    tagline: "Talk with your assistant in Thai.",
+    platform: "iPhone · iOS 17+ · SwiftUI prototype",
+    features: [
+      { icon: Mic, title: "Speak in Thai", text: "Tap to talk and follow the live transcript as you speak." },
+      { icon: AudioLines, title: "Listen to replies", text: "Hear responses in an iOS voice and follow the highlighted text as LYLA reads." },
+      { icon: Settings2, title: "Connect to Ollama", text: "Choose an Ollama endpoint and model on your Mac, or use the echo mode to test speech without a model." },
     ],
   },
 };
@@ -72,6 +91,29 @@ function WorkspacePreview({ id }: { id: ProjectId }) {
       <figure id="workspace" className={styles.figure}>
         <Image className={theme.screenshot} src="/projects/edith-overview.png" width={2820} height={2956} sizes="(max-width: 768px) 100vw, 900px" alt="EDITH overview dashboard with request counts, response times, and activity charts" />
         <figcaption>EDITH overview · development screenshot</figcaption>
+      </figure>
+    );
+  }
+
+  if (id === "natalie") {
+    return (
+      <figure id="workspace" className={styles.figure}>
+        <Image className={theme.screenshot} src="/projects/natalie-history.png" width={1320} height={760} sizes="(max-width: 768px) 100vw, 900px" alt="Natalie showing a branch graph, commit metadata, and a file diff in a sample repository" />
+        <figcaption>Natalie commit history · sample repository</figcaption>
+      </figure>
+    );
+  }
+
+  if (id === "lyla") {
+    return (
+      <figure id="workspace" className={styles.figure}>
+        <div className={theme.voicePreview} aria-hidden="true">
+          <div className={theme.voiceHeader}><strong>LYLA</strong><Settings2 size={18} /></div>
+          <div className={theme.voiceOrb}><AudioLines size={42} /></div>
+          <p lang="th">พร้อมฟัง</p>
+          <span className={theme.voicePrompt} lang="th"><Mic size={17} /> แตะเพื่อพูด</span>
+        </div>
+        <figcaption>Illustration of LYLA’s Thai voice interface.</figcaption>
       </figure>
     );
   }
@@ -134,13 +176,17 @@ export default async function WorkshopProjectPage({ params }: Props) {
           <a href={repository}><Github size={16} /> GitHub <ArrowUpRight size={13} /></a>
         </nav>
         <section className={styles.hero} aria-labelledby="project-title">
-          <Image src={`/projects/${id}.png`} alt="" width={72} height={72} className={styles.icon} />
+          <ProjectIcon id={id} size={72} className={styles.icon} />
           <p className={styles.eyebrow}>OPEN SOURCE / {project.category.toUpperCase()}</p>
           <h1 id="project-title">{project.name}</h1>
           <p className={styles.tagline}>{detail.tagline}</p>
           <p className={styles.description}>{project.description}</p>
           <div className={styles.actions}>
-            <a className={styles.download} href={`${repository}/releases`}><Download size={17} /> View releases</a>
+            {project.sourceOnly ? (
+              <a className={styles.download} href="#getting-started">Run from source <ArrowUpRight size={14} /></a>
+            ) : (
+              <a className={styles.download} href={`${repository}/releases`}><Download size={17} /> View releases</a>
+            )}
             <a href="#workspace">Explore the workspace <ArrowUpRight size={14} /></a>
           </div>
           <p className={styles.requirements}>{detail.platform}</p>
@@ -151,6 +197,13 @@ export default async function WorkshopProjectPage({ params }: Props) {
             <article key={title}><Icon size={22} aria-hidden="true" /><h2>{title}</h2><p>{text}</p></article>
           ))}
         </section>
+        {id === "lyla" && (
+          <section id="getting-started" className={theme.gettingStarted}>
+            <h2>Run LYLA from source</h2>
+            <p>Open <code>LYLA.xcodeproj</code> in Xcode and run the LYLA scheme on an iPhone with iOS 17 or later, or in Simulator. To generate replies, connect LYLA to Ollama running on your Mac.</p>
+            <a href={`${repository}#readme`}>Read the setup instructions <ArrowUpRight size={15} /></a>
+          </section>
+        )}
         <footer className={styles.footer}><Link href="/#open-source"><ArrowLeft size={15} /> More from the workshop</Link></footer>
       </div>
     </main>

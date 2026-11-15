@@ -370,6 +370,12 @@
 .project[data-project="u"] {
   --project-color: #a392cd;
 }
+.project[data-project="natalie"] {
+  --project-color: #9d9af2;
+}
+.project[data-project="lyla"] {
+  --project-color: #e6a45f;
+}
 .projectTop {
   display: flex;
   gap: 12px;

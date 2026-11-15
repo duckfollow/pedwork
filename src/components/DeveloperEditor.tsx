@@ -72,7 +72,11 @@ export default function DeveloperEditor() {
       </div>
       <div className={styles.codeIndentDouble}>
         <a className={styles.codeProjectLink} href="#project-dum-e" aria-label="Explore Dum-E">&quot;Dum-E&quot;</a>,{" "}
-        <a className={styles.codeProjectLink} href="#project-u" aria-label="Explore u">&quot;u&quot;</a>
+        <a className={styles.codeProjectLink} href="#project-u" aria-label="Explore u">&quot;u&quot;</a>,
+      </div>
+      <div className={styles.codeIndentDouble}>
+        <a className={styles.codeProjectLink} href="#project-natalie" aria-label="Explore Natalie">&quot;Natalie&quot;</a>,{" "}
+        <a className={styles.codeProjectLink} href="#project-lyla" aria-label="Explore LYLA">&quot;LYLA&quot;</a>
       </div>
       <div className={styles.codeIndent}>]</div>
       <div>{"};"}</div>

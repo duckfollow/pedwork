@@ -10,6 +10,7 @@ import {
 import DeveloperEditor from "@/components/DeveloperEditor";
 import OpenSourceProjects from "@/components/OpenSourceProjects";
 import PortfolioThemeToggle from "@/components/PortfolioThemeToggle";
+import { projects } from "@/lib/projects";
 import styles from "./portfolio.module.css";
 import PortfolioMotion from "@/components/PortfolioMotion";
 
@@ -129,7 +130,7 @@ export default function Home() {
           <span>THE DEVELOPER’S WORKSHOP</span>
           <p>Inspect. Connect. Query. Automate.</p>
           <span>
-            4 OPEN SOURCE TOOLS <ArrowDown size={13} aria-hidden="true" />
+            {projects.length} OPEN SOURCE TOOLS <ArrowDown size={13} aria-hidden="true" />
           </span>
         </div>
         <OpenSourceProjects />

@@ -32,3 +32,63 @@
 }
 .results :is(th, td) { padding: 5px 4px; text-align: left; border-bottom: 1px solid #3d4152; }
 .results th { color: var(--accent); }
+
+.page[data-workshop-project="natalie"] { --accent: #aaa8ff; --glow: #292549; }
+.page[data-workshop-project="lyla"] { --accent: #ffb55e; --glow: #3b2519; }
+
+.voicePreview {
+  display: grid;
+  justify-items: center;
+  gap: 20px;
+  width: min(100%, 300px);
+  margin-inline: auto;
+  padding: 24px 20px;
+  border: 1px solid #63442e;
+  border-radius: 28px;
+  background: linear-gradient(#2b1b14, #14100e);
+}
+.voiceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  letter-spacing: .2em;
+}
+.voiceOrb {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  aspect-ratio: 1;
+  margin-top: 12px;
+  border: 1px solid #ab663f;
+  border-radius: 50%;
+  color: var(--accent);
+  background: radial-gradient(#684026, #302018);
+}
+.voicePreview p { margin: 0; }
+.voicePrompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #21150f;
+  font-weight: 650;
+}
+.gettingStarted {
+  max-width: 620px;
+  margin: 48px auto;
+  line-height: 1.7;
+}
+.gettingStarted a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

@@ -31,4 +31,21 @@ export const projects = [
       "Build and test API requests, then connect them into sequential flows with variables, conditions, and loops. Available on desktop and in your browser.",
     tags: ["API client", "Workflows", "Loops"],
   },
+  {
+    id: "natalie",
+    name: "Natalie",
+    category: "Git client",
+    description:
+      "Review diffs, stage files or individual hunks, and explore searchable commit history in a macOS Git client.",
+    tags: ["Commit graph", "Diff review", "Branch workflows"],
+  },
+  {
+    id: "lyla",
+    name: "LYLA",
+    category: "Thai voice assistant",
+    description:
+      "A SwiftUI prototype for talking with an AI assistant in Thai. Send transcribed speech to Ollama on your Mac and hear the response with an iOS voice.",
+    tags: ["iOS", "Thai speech", "Ollama"],
+    sourceOnly: true,
+  },
 ];

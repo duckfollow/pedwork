@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import ProjectIcon from "@/components/ProjectIcon";
 import { ArrowUpRight, Github, Download } from "lucide-react";
 import { projects } from "@/lib/projects";
 import styles from "@/app/portfolio.module.css";
@@ -42,12 +42,7 @@ export default function OpenSourceProjects() {
               <ArrowUpRight size={17} aria-hidden="true" />
             </div>
             <div className={styles.projectBrand}>
-              <Image
-                src={`/projects/${project.id}.png`}
-                alt=""
-                width={60}
-                height={60}
-              />
+              <ProjectIcon id={project.id} size={60} />
               <h3><Link href={`/${project.id}`} className={styles.projectDetailsLink}>{project.name}</Link></h3>
             </div>
             <p>{project.description}</p>
@@ -66,14 +61,18 @@ export default function OpenSourceProjects() {
                 <Github size={15} aria-hidden="true" /> Source code{" "}
                 <ArrowUpRight size={13} aria-hidden="true" />
               </a>
-              <a
-                href={`https://github.com/duckfollow/${project.id}/releases`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Download ${project.name} releases`}
-              >
-                <Download size={14} aria-hidden="true" /> Releases
-              </a>
+              {project.sourceOnly ? (
+                <Link href={`/${project.id}#getting-started`}>Run from source <ArrowUpRight size={13} aria-hidden="true" /></Link>
+              ) : (
+                <a
+                  href={`https://github.com/duckfollow/${project.id}/releases`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Download ${project.name} releases`}
+                >
+                  <Download size={14} aria-hidden="true" /> Releases
+                </a>
+              )}
             </div>
           </article>
         ))}

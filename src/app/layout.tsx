@@ -22,7 +22,7 @@ const siteUrl = new URL(
 );
 const title = "Prasit Suphancho — Developer & Open Source Tools";
 const description =
-  "Software developer behind EDITH, Ultron, Dum-E, and u. Explore open-source tools for debugging, terminals, databases, and API workflows.";
+  "Software developer behind EDITH, Ultron, Dum-E, u, Natalie, and LYLA. Explore open-source tools for development and a Thai voice assistant.";
 const socialImage = {
   url: "/social-preview",
   width: 1200,
@@ -45,6 +45,8 @@ export const metadata: Metadata = {
     "EDITH",
     "Ultron",
     "Dum-E",
+    "Natalie",
+    "LYLA",
     "API workflows",
   ],
   authors: [{ name: "Prasit Suphancho" }],
