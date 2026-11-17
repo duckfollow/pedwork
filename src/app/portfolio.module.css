@@ -1,3 +1,51 @@
+@property --p-bg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f6f5f0;
+}
+
+@property --p-panel {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #fdfcf9;
+}
+
+@property --p-inset {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #eeede7;
+}
+
+@property --p-line {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #deded5;
+}
+
+@property --p-text {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #242a26;
+}
+
+@property --p-muted {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #6c746e;
+}
+
+@property --p-accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #26785f;
+}
+
+@property --p-orange {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #b76035;
+}
+
 .site {
   --p-bg: #f6f5f0;
   --p-panel: #fdfcf9;
@@ -21,6 +69,14 @@
   --p-muted: #95a397;
   --p-accent: #a3d3b2;
   --p-orange: #e6a06d;
+}
+/* Animate the palette together so surfaces, text, and borders change in sync. */
+@media (prefers-reduced-motion: no-preference) {
+  .site {
+    transition-property: --p-bg, --p-panel, --p-inset, --p-line, --p-text, --p-muted, --p-accent, --p-orange;
+    transition-duration: 650ms;
+    transition-timing-function: ease-in-out;
+  }
 }
 .site a {
   color: inherit;
